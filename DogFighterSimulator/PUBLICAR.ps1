@@ -261,7 +261,7 @@ try {
             $request = @{
                 assetType       = 'Audio'
                 displayName     = $m.Name
-                description     = 'Trilha original do Dog Fighter Simulator'
+                description     = 'Original soundtrack of Dog Fighter Simulator'
                 creationContext = @{ creator = @{ userId = [string]$cfg.UserId } }
             } | ConvertTo-Json -Depth 5 -Compress
             $op = PostForm "$api/assets/v1/assets" @{ request = $request } $path 'fileContent' 'audio/ogg' "Upload de $($m.File)"
@@ -299,7 +299,7 @@ try {
             $request = @{
                 assetType       = 'Decal'
                 displayName     = "Dog Fighter - Mapa $k"
-                description     = 'Mapa do Dog Fighter Simulator visto de cima'
+                description     = 'Top-down map of Dog Fighter Simulator'
                 creationContext = @{ creator = @{ userId = [string]$cfg.UserId } }
             } | ConvertTo-Json -Depth 5 -Compress
             $op = PostForm "$api/assets/v1/assets" @{ request = $request } $path 'fileContent' 'image/png' "Upload do mapa $k"
@@ -439,20 +439,25 @@ try {
         Say '   OK maximo de 50 jogadores por servidor' 'Green'
     } catch { Say "   nao consegui mudar o maximo de jogadores: $($_.Exception.Message)" 'Yellow'; Say '   -> mude a mao: Creator Hub > o jogo > Places > Configure Place > Server Size = 50 (ou no Studio: Game Settings > Places > Max Players = 50)' 'Yellow' }
     try {
-        # (2026-10-24, pedido do dono: "mude a descricao do jogo") texto novo da pagina do jogo (ingles, ate 1000 letras)
+        # (2026-10-25, pedido do dono: descricao nova em ingles, com as novidades) texto da pagina do jogo (ingles, ate 1000 letras)
         $desc = @(
-            'HALLOWEEN UPDATE: the SPOOKY CLOWN fights with 2 CLONES!',
+            'NEW UPDATE: Ranking Island, SHINY dogs, EVOLVE, Clans, Season Pass and Weekend Events!',
             '',
-            'Be a dog and FIGHT! Get your first pup from Prof. Barkley in Pawville, then battle wild dogs and island champions, finish missions and unlock new islands.',
+            'Be a dog and FIGHT! Get your first pup in Pawville, battle wild dogs, weaken them and throw a LEASH to catch them.',
             '',
             'FEATURES',
-            '- Collect 80+ dogs: Common to Mythic, Halloween and Divine',
+            '- Catch 80+ dogs: Common to Mythic, Halloween and Divine',
+            '- 1 in 500 wild dogs is SHINY: catch it before anyone else!',
+            '- EVOLVE: 3 equal dogs = 1 GOLD, 3 GOLD = 1 RAINBOW',
             '- Aim your powers, dash and combo: every dog has its own skills',
-            '- Winged dogs really FLY between 8 floating islands',
-            '- Every island is harder: beat its champion to open the next one',
-            '- Free-for-all PvP in the Colosseum',
-            '- The Super Boss wakes up every 30 minutes: team up for 5x rewards!',
-            '- Hatch eggs, spin the Dog Roulette and trade dogs with friends',
+            '- Winged dogs really FLY between the islands',
+            '- Beat each island champion to open the next one',
+            '- Hats, collars, glasses and capes for your dog',
+            '- Create a CLAN with friends and climb the weekly ranking',
+            '- Season Pass with an EXCLUSIVE dog at level 30',
+            '- Weekend events: 2x Catch, 2x Cash and Rare Dog Rain',
+            '- PvP in the Colosseum and a Super Boss for everyone',
+            '- Safe trades with friends and the Ranking Island leaderboards',
             '',
             'Like the game and add it to your favorites to get every new update!'
         ) -join "`n"
