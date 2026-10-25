@@ -457,9 +457,9 @@ try {
             '🎟️ Season Pass with an EXCLUSIVE dog at level 30',
             '🎉 Weekend events: 2x Catch, 2x Cash and Rare Dog Rain',
             '⚔️ PvP in the Colosseum and a 👹 Super Boss for everyone',
-            '🤝 Safe trades with friends and 🏆 Ranking Island leaderboards',
+            '🤝 Safe trades with friends and leaderboards',
             '',
-            '👍 Like the game and ⭐ add it to your favorites to get every new update!'
+            '👍 Like and ⭐ favorite the game to get every new update!'
         ) -join "`n"
         SendJson 'PATCH' "$api/cloud/v2/universes/$($cfg.UniverseId)?updateMask=description" @{ description = $desc } 'Descricao' | Out-Null
         Say '   OK descricao do jogo' 'Green'
