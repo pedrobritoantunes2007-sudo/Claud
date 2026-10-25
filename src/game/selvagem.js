@@ -134,11 +134,15 @@ export function updateAI(game, f, dt, now) {
 		const dist = Math.hypot(t.x - f.x, t.z - f.z);
 		const reach = C.MELEE_REACH + f.body.radius + t.body.radius - 0.5;
 		// habilidade de vez em quando
-		if (now > ai.nextSkill && dist < 26 && game.skills && game.skills.canUse(f, 0)) {
-			ai.nextSkill = now + 7 + Math.random() * 6;
-			face(f, t.x, t.z, 1, 1);
-			game.skills.use(f, 0, t.x, t.y, t.z, t);
-			return;
+		if (now > ai.nextSkill && dist < 26 && game.skills) {
+			const k = game.skills.pick(f);
+			if (k >= 0) {
+				ai.nextSkill = now + 7 + Math.random() * 6;
+				face(f, t.x, t.z, 1, 1);
+				game.skills.use(f, k, t.x, t.y, t.z, t);
+				return;
+			}
+			ai.nextSkill = now + 1;
 		}
 		if (f.shot) {
 			// atirador: fica a meia distância, rodeando, e atira

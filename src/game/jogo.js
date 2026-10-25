@@ -6,7 +6,9 @@ import { Input, endInputFrame } from '../core/input.js';
 import { World } from '../world/mundo.js';
 import { WATER_Y } from '../world/fisica.js';
 import { FollowCamera } from './camera.js';
-import { Fighter } from './lutador.js';
+import { Fighter, setFighterClock } from './lutador.js';
+import { Skills } from './habilidades.js';
+import { Roblox } from '../rbx/ambiente.js';
 import { Combat, hostile } from './combate.js';
 import { Effects } from './efeitos.js';
 import { PlayerController } from './jogador.js';
@@ -49,6 +51,18 @@ export class Game {
 		this.quality = 'high';
 		this.koUntil = 0;
 		this.portalCooldown = 0;
+		setFighterClock(() => this.time);
+		// os efeitos e as habilidades do jogo original (Lua traduzido) rodam neste "Roblox"
+		this.rbx = new Roblox({
+			scene: this.scene,
+			camera: R.camera,
+			renderer: R.renderer,
+			ui: uiRoot,
+			quality: R.quality,
+			raycast: (ox, oy, oz, dx, dy, dz, max) => (this.world.physics ? this.world.physics.raycast(ox, oy, oz, dx, dy, dz, max) : null),
+		});
+		this.rbx.onSound = (name, at, vol) => this.audio && this.audio.sfx(name, at, vol);
+		this.skills = new Skills(this);
 	}
 
 	on(name, fn) {
@@ -94,6 +108,7 @@ export class Game {
 		const i = this.fighters.indexOf(f);
 		if (i >= 0) this.fighters.splice(i, 1);
 		this.plates.detach(f);
+		this.rbx.dropModel(f);
 		f.dispose();
 	}
 
@@ -105,6 +120,8 @@ export class Game {
 		this.wild = [];
 		this.respawns = [];
 		this.combat.clear();
+		this.skills.clear();
+		this.rbx.clear();
 		this.fx.clear();
 		await this.world.load(id, (p) => this.emit('loading', id, p));
 		this.world.setQuality(this.quality);
@@ -367,6 +384,8 @@ export class Game {
 			f.sleeping = d > ACTIVE_DIST && !f.target;
 			if (!f.sleeping) updateAI(this, f, dt, now);
 		}
+		// habilidades e efeitos do Lua (podem mover cachorros: antes da física)
+		this.rbx.step(dt);
 		separate(this.fighters, dt);
 		const bounds = this.bounds();
 		for (const f of this.fighters) {
@@ -418,6 +437,7 @@ export class Game {
 			this.world.update(dt, now, p.x, p.z, cx, cz);
 			followSun(p.x, p.y, p.z);
 		}
+		this.rbx.post(dt);
 		this.fx.update(dt);
 		this.plates.update(dt);
 		this.emit('frame', dt, now);

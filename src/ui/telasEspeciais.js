@@ -213,7 +213,7 @@ export function titleScreen(app) {
 			resolve();
 		});
 		mid.appendChild(play);
-		const foot = h('div', 'rodape', 'Made by Pedro · 80 dogs · 10 islands · v' + (app.version || '1.0'));
+		const foot = h('div', 'rodape', '80 dogs · 10 islands · v' + (app.version || '1.0'));
 		root.append(top, mid, foot);
 		app.uiRoot.appendChild(root);
 	});

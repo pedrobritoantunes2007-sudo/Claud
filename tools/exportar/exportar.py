@@ -309,15 +309,21 @@ def build_rig(dog):
         bones.append(entry)
 
     out_parts = []
+    names = []
+    name_idx = {}
     for p in parts:
         if p['tr'] >= 0.98 or p['name'] == 'HumanoidRootPart':
             continue
         b = bone_of(p['i'])
         local = cf_mul(cf_inv(world[b]), p['cf'])
         mat = MATERIAL.get(p['mat'], 0)
+        nm = p['name']
+        if nm not in name_idx:
+            name_idx[nm] = len(names)
+            names.append(nm)
         out_parts.append([idx_of[b], 1 if p['cls'] == 'WedgePart' else 0, r3(p['size'][0]), r3(p['size'][1]), r3(p['size'][2])]
-                         + tr7(local) + [hexcolor(*p['color']), mat, r3(p['tr'])])
-    return bones, out_parts, max_err
+                         + tr7(local) + [hexcolor(*p['color']), mat, r3(p['tr']), name_idx[nm]])
+    return bones, out_parts, max_err, names
 
 
 def export_dogs(roblox, ids):
@@ -330,7 +336,7 @@ def export_dogs(roblox, ids):
         if f[0] == 'DOG':
             cur = {'id': f[1], 'name': f[2], 'rarity': f[3], 'hip': float(f[4]), 'groundHip': float(f[5]), 'legLen': float(f[6]),
                    'scale': float(f[7]), 'heads': int(f[8]), 'wings': f[9] == 'true', 'float': f[10] == 'true', 'rootY': float(f[11]),
-                   'parts': [], 'joints': []}
+                   'rootX': float(f[12]), 'rootZ': float(f[13]), 'parts': [], 'joints': []}
             dogs.append(cur)
         elif f[0] == 'P':
             cur['parts'].append({'i': int(f[1]), 'cls': f[2], 'size': [float(v) for v in f[3:6]], 'cf': cf_from([float(v) for v in f[6:18]]),
@@ -351,11 +357,11 @@ def export_dogs(roblox, ids):
     worst = 0
     total = 0
     for d in dogs:
-        bones, parts, err = build_rig(d)
+        bones, parts, err, names = build_rig(d)
         worst = max(worst, err)
         total += len(parts)
         result[d['id']] = {'name': d['name'], 'rarity': d['rarity'], 'scale': r4(d['scale']), 'hip': r4(d['hip']), 'legLen': r4(d['legLen']),
-                           'rootY': r4(d['rootY']),
+                           'rootY': r4(d['rootY']), 'root': [r4(d['rootX']), r4(d['rootY']), r4(d['rootZ'])], 'names': names,
                            'heads': d['heads'], 'wings': d['wings'], 'float': d['float'], 'bones': bones, 'parts': parts}
     os.makedirs(DATA, exist_ok=True)
     path = os.path.join(DATA, 'cachorros.json')

@@ -111,9 +111,10 @@ export class PlayerController {
 			body.vz += (mz * speed - body.vz) * k;
 		}
 		// virar: para onde anda; atacando, para a mira
-		if (!stunned && !dashing) {
+		if (!stunned && !dashing && !controlled) {
 			let want = null;
-			if (now < this.faceAimUntil) want = Math.atan2(-(this.aim.x - f.x), -(this.aim.z - f.z));
+			if (f.faceAt && now < f.faceAt.until) want = Math.atan2(-(f.faceAt.x - f.x), -(f.faceAt.z - f.z));
+			else if (now < this.faceAimUntil) want = Math.atan2(-(this.aim.x - f.x), -(this.aim.z - f.z));
 			else if (moving) want = Math.atan2(-mx, -mz);
 			if (want !== null) f.yaw += angleDiff(f.yaw, want) * Math.min(1, dt * (now < this.faceAimUntil ? 18 : 11));
 		}

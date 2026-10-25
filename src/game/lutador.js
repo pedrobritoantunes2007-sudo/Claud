@@ -6,6 +6,11 @@ import { makeBody, stepBody } from './corpo.js';
 import { SPECIES, stats as calcStats, gameScale, shotOf, elementsOf } from '../data/jogo.js';
 
 let nextId = 1;
+// relógio do jogo (o Game troca para o tempo dele: pausar o jogo pausa as poses)
+let clock = () => performance.now() / 1000;
+export function setFighterClock(fn) {
+	clock = fn;
+}
 const _e = new THREE.Euler(0, 0, 0, 'YXZ');
 
 export class Fighter {
@@ -107,7 +112,7 @@ export class Fighter {
 
 	setAction(name, duration, speed = 1) {
 		this.action = name;
-		this.actionUntil = performance.now() / 1000 + duration;
+		this.actionUntil = clock() + duration;
 		this.actionSpeed = speed;
 	}
 
@@ -161,6 +166,14 @@ export class Fighter {
 	}
 
 	dispose() {
+		if (this.$rbx) {
+			try {
+				this.$rbx.Destroy();
+			} catch (e) {
+				console.warn(e);
+			}
+			this.$rbx = null;
+		}
 		disposeDogModel(this.rig);
 		if (this.plate) this.plate.remove();
 		this.plate = null;

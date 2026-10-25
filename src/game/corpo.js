@@ -6,6 +6,11 @@ export const GRAVITY = 150;
 // body: { x, y (pés), z, vx, vy, vz, radius, height, step, grounded, inWater, flying, swimDepth }
 export function stepBody(body, physics, dt, opts = {}) {
 	if (!physics) return;
+	// preso por uma habilidade (salto, voo curto, volta): quem move é a habilidade
+	if (body.kinematic) {
+		body.vx = body.vy = body.vz = 0;
+		return;
+	}
 	const r = body.radius, h = body.height, step = body.step;
 	// ---- movimento na horizontal (com escorregar na parede)
 	let nx = body.x + body.vx * dt, nz = body.z + body.vz * dt;

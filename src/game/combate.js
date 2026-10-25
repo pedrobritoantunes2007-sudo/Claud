@@ -84,6 +84,7 @@ export class Combat {
 		const shield = target.statusOn('shield', now);
 		if (shield) mult *= 1 - shield.reduce;
 		let dmg = Math.max(1, Math.round(amount * mult));
+		if (opts.crit) label = 'CRIT!';
 		target.hp -= dmg;
 		target.lastHurtAt = now;
 		if (attacker) {
@@ -103,8 +104,17 @@ export class Combat {
 			}
 		}
 		target.anim.playHit(Math.min(1, (dmg / target.maxHp) * 6));
-		// empurrão
-		if (opts.knock || opts.lift) {
+		// empurrão: velocidade pronta (habilidades) ou força + pulinho
+		if (opts.vel) {
+			const resist = target.kind === 'champion' ? 0.15 : 1;
+			target.body.vx = opts.vel[0] * resist;
+			target.body.vz = opts.vel[2] * resist;
+			if (opts.vel[1] > 0) {
+				target.body.vy = opts.vel[1] * resist;
+				target.body.grounded = false;
+			}
+			target.knockUntil = now + 0.25;
+		} else if (opts.knock || opts.lift) {
 			let dx = 0, dz = 0;
 			if (opts.from) {
 				dx = target.x - opts.from[0];

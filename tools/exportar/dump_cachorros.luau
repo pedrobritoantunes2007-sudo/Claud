@@ -61,6 +61,8 @@ for _, id in ipairs(wanted) do
 		tostring(model:GetAttribute("Wings") == true),
 		tostring(model:GetAttribute("Float") == true),
 		f(root and root.Size.Y or 0),
+		f(root and root.Size.X or 0),
+		f(root and root.Size.Z or 0),
 	}, "|"))
 	local index = {}
 	local n = 0
