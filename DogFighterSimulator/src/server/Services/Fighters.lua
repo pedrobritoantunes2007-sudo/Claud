@@ -725,6 +725,17 @@ function Fighters.RookieMult(attacker, target)
 	return 1
 end
 
+-- 🧱 empurrão de golpe/poder num alvo (Config.KNOCKBACK): desligado, só o "jogar para cima" puro continua
+function Fighters.Knock(target, velocity, duration)
+	if not Config.KNOCKBACK then
+		local side = Vector3.new(velocity.X, 0, velocity.Z).Magnitude
+		if side > 1 or velocity.Y <= 0 then
+			return
+		end
+	end
+	Fighters.Push(target, velocity, duration)
+end
+
 -- opts = { Knockback = Vector3, Crit = bool, Color = Color3, NoText = bool }
 function Fighters.Damage(attacker, target, amount, opts)
 	opts = opts or {}
@@ -791,7 +802,7 @@ function Fighters.Damage(attacker, target, amount, opts)
 		if target.Kind == "boss" then
 			kb *= 0.15
 		end
-		Fighters.Push(target, kb, 0.18)
+		Fighters.Knock(target, kb, 0.18)
 	end
 	return dmg
 end

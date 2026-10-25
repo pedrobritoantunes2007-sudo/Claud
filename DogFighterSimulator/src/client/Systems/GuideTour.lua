@@ -831,6 +831,7 @@ local function buildUI()
 		Size = UDim2.fromOffset(170, 34),
 		Text = "skip tutorial ✕",
 		ZIndex = 8,
+		Visible = Config.TUTORIAL_SKIP == true, -- (2026-10-25: o tutorial não pode ser pulado)
 	}, C.Panel2)
 
 	-- 🎯 objetivo (em cima do diálogo / da barra de golpes)
@@ -2004,7 +2005,7 @@ local function run(profile: any)
 		end)
 		local armed = 0
 		ui.Skip.Activated:Connect(function()
-			if not tour then
+			if not tour or not Config.TUTORIAL_SKIP then
 				return
 			end
 			if os.clock() - armed < 3 then

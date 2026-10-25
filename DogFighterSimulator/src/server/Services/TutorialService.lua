@@ -141,6 +141,9 @@ function TutorialService.Start(r)
 		if done(data) then
 			return
 		end
+		if action == "skip" and not Config.TUTORIAL_SKIP then
+			return -- (2026-10-25: o tutorial não pode ser pulado — Config.TUTORIAL_SKIP)
+		end
 		if action == "skip" then
 			-- pular: acaba aqui (sem prêmio); quem ainda é a pessoa com cachorro vira o cachorro
 			data.Tutorial = TutorialService.DONE

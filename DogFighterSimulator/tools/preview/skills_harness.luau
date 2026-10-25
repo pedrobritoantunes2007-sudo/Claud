@@ -304,6 +304,16 @@ function FAKE.Teleport(f, pos)
 	touchBody(f)
 	f.Model:PivotTo(CFrame.new(pos + Vector3.new(0, standY(f), 0)))
 end
+-- 🧱 (2026-10-25) empurrão de golpe/poder num alvo: igual ao Fighters.Knock de verdade (Config.KNOCKBACK desligado =
+-- só o "jogar para cima" puro passa)
+function FAKE.Knock(f, v, d)
+	assert(typeof(v) == "Vector3" and v.X == v.X, "Knock com velocidade inválida")
+	local Config = require(RS.Shared.Config)
+	if not Config.KNOCKBACK and (Vector3.new(v.X, 0, v.Z).Magnitude > 1 or v.Y <= 0) then
+		return
+	end
+	FAKE.Push(f, v, d)
+end
 -- empurrão: anda de verdade (para o dash funcionar no teste)
 function FAKE.Push(f, v, d)
 	assert(typeof(v) == "Vector3" and v.X == v.X, "Push com velocidade inválida")

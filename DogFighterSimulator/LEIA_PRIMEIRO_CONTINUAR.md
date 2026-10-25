@@ -17,6 +17,23 @@
 - IDs do jogo: `publicar_ids.json`.
 
 ## Estado atual (últimas mudanças)
+- 🧱🧍 2026-10-25 (o dono: sem recuo, bosses bugados, botão Z humano, boneco segue o cachorro, troca de cachorro
+  travada, proibir pular o tutorial, início em branco no gráfico baixo):
+  - 🧱 SEM RECUO: `Config.KNOCKBACK = false` → golpe/tiro/poder não empurram ninguém (`Fighters.Knock`; só o "jogar para
+    cima" puro continua; puxões continuam). Atiradores não se afastam de quem chega perto e ninguém foge quando está
+    fraco (`CombatService`). true = como era.
+  - 👑 Campeões das ilhas perseguem até `Config.CHAMPION_ROAM` (90) do palco (era 26: apanhavam, voavam para fora, eram
+    jogados de volta e paravam de bater); sem briga voltam para perto do palco. Navio/pedaço flutuante continuam presos.
+  - 🔧 TROCAR DE CACHORRO TRAVAVA: `respawnAndResume` ia para uma rotina da Arena que não fazia nada (State já "arena")
+    e o cachorro novo ficava no controle do servidor. Agora sempre recomeça a `homeRoutine`.
+  - 🚫 Tutorial não pode ser pulado: `Config.TUTORIAL_SKIP = false` (sem botões skip no GuideTour/Tutorial; o
+    TutorialService recusa "skip"). `tour_test.py` confere.
+  - 🧍 Botão HUMAN/DOG (tecla Z) no canto de baixo à esquerda no PC (`Systems/HumanButton`; no celular segue o botão do
+    TouchPad). Cachorro: o avatar do jogador anda atrás dele (`Services/FollowerService`, atravessa tudo, aparece atrás
+    quando fica longe). Pessoa (Z): o cachorro segue a pessoa como pet (`DogService.petRoutine`, fica em "home": ninguém
+    briga com ele). `Config.AVATAR_FOLLOWS = false` desliga.
+  - 🎬 Tela de início: a câmera voa perto da 🏡 Pawville (~300 studs) em vez de ~1000 studs da ilha principal (no gráfico
+    baixo o Roblox não desenhava nada tão longe).
 - 🌊🏆✨ LOTE 2026-10-25 (10 pedidos do dono + "crie um HUD donation, onde os jogadores podem doar robux para mim").
   Nada disso foi testado dentro do Roblox ainda: pedir prints. Códigos do dono (botão 🎟️ CODES) para testar:
   `eventcatch2x` / `eventcash2x` / `eventrain` / `eventoff` / `eventauto`, `shiny`, `triplo`, `stars`.

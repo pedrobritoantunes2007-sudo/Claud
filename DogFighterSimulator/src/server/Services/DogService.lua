@@ -201,7 +201,7 @@ end
 DogService.SetFlying = setFlying
 
 ---------------------------------------------------------------- rotinas
-local homeRoutine, arenaRoutine
+local homeRoutine
 
 -- Uma batida no estande: XP (com gamepass), efeito no boneco e cura se estiver "Recuperando".
 -- fraction = parte do XP de uma batida (1 = automática, Config.TRAIN_CLICK_XP = botão TRAIN)
@@ -327,14 +327,6 @@ homeRoutine = function(player)
 			end
 		end
 	end)
-end
-
--- Antes o cachorro ia sozinho para a Arena; agora o jogador vai andando (mesma rotina livre).
-arenaRoutine = function(player)
-	local s = state(player)
-	if s.State ~= "home" and s.State ~= "arena" then
-		homeRoutine(player)
-	end
 end
 
 ---------------------------------------------------------------- spawn
@@ -497,12 +489,11 @@ local function respawnAndResume(player, keepPlace)
 	end
 	local f = DogService.Spawn(player, nil, keepPlace)
 	if f then
-		local s = state(player)
-		if s.Mode ~= "off" and not f.Recovering then
-			arenaRoutine(player)
-		else
-			homeRoutine(player)
-		end
+		-- (2026-10-25, o dono: "quando eu troco de cachorro quando já sou um cachorro fica travado e não consigo mexer")
+		-- o cachorro novo nasce no controle do servidor e só a rotina devolve o controle ao jogador. Antes, trocando
+		-- numa ilha (Mode "pve"), ia para uma rotina da Arena que não fazia nada (State já era "arena"): ficava preso.
+		-- A rotina livre é uma só: sempre recomeça ela para o cachorro novo.
+		homeRoutine(player)
 	end
 end
 DogService.Respawn = respawnAndResume
@@ -1106,6 +1097,45 @@ local function moveTo(f, position, timeout, isCurrent)
 	return false
 end
 
+-- 🐾 pessoa (Z) sem casinha: o cachorro anda atrás dela como um pet (fica em "home": ninguém briga com ele)
+local function petRoutine(player)
+	local gen = setState(player, "human")
+	local s = state(player)
+	local f = s.Fighter
+	if not Fighters.Alive(f) then
+		return
+	end
+	f.Zone = "home"
+	f.Island = nil
+	f.Controlled = true
+	f.Target = nil
+	setControl(player, f, true)
+	player:SetAttribute("AutoControl", false) -- o jogador (pessoa) não está travado
+	task.spawn(function()
+		while s.Gen == gen and Fighters.Alive(f) do
+			local avatar = player.Character
+			local aroot = avatar and avatar ~= f.Model and avatar:FindFirstChild("HumanoidRootPart")
+			local ahum = avatar and avatar:FindFirstChildOfClass("Humanoid")
+			if aroot and ahum then
+				local d = Fighters.FlatDistance(aroot.Position, f.Root.Position)
+				local back = aroot.Position - aroot.CFrame.LookVector * 5 + aroot.CFrame.RightVector * 3
+				if d > 70 or math.abs(aroot.Position.Y - f.Root.Position.Y) > 40 then
+					local g = ZoneGeo.Ground(back, aroot.Position.Y + 10, 60)
+					if g then
+						Fighters.Teleport(f, g)
+					end
+				elseif d > 8 then
+					f.Humanoid.WalkSpeed = math.max(f.Stats.Speed, ahum.WalkSpeed * (d > 20 and 1.5 or 1.15))
+					f.Humanoid:MoveTo(back)
+				else
+					Fighters.Stop(f)
+				end
+			end
+			task.wait(0.25)
+		end
+	end)
+end
+
 local function trainerRoutine(player)
 	local gen = setState(player, "human")
 	local s = state(player)
@@ -1194,18 +1224,29 @@ local function toggleHuman(player)
 	if ok and avatar and at then
 		avatar:PivotTo(CFrame.new(at + Vector3.new(0, 3, 0)))
 	end
-	-- 2) um cachorro NOVO (não é o personagem) nasce na frente da casinha e vai treinar
+	-- 2) um cachorro NOVO (não é o personagem) nasce na frente da casinha e vai treinar; sem casinha (2026-10-25,
+	-- pedido do dono) ele vira PET e segue a pessoa
 	local plotCf = PlotService.CFrame(player)
 	local trainer = plotCf and DogService.Spawn(player, plotCf * Layout.PLOT.DogSpawn, false, true)
+	local pet = nil
 	if trainer then
 		trainerRoutine(player)
-	else
+	elseif Config.AVATAR_FOLLOWS ~= false and at then
+		local ground = ZoneGeo.Ground(at + Vector3.new(4, 0, 4), at.Y + 10, 60)
+		pet = DogService.Spawn(player, CFrame.new(ground or at), false, true)
+		if pet then
+			petRoutine(player)
+		end
+	end
+	if not (trainer or pet) then
 		s.State = "human"
 		player:SetAttribute("DogState", "human")
 	end
 	remotes.Notify:FireClient(
 		player,
-		trainer and "🧍 You're you again! Your dog went to train 🥊. Press Z to be your dog." or "🧍 You're you again! Press Z to be your dog.",
+		trainer and "🧍 You're you again! Your dog went to train 🥊. Press Z to be your dog."
+			or pet and "🧍 You're you again! Your dog follows you 🐾. Press Z to be your dog."
+			or "🧍 You're you again! Press Z to be your dog.",
 		"gold"
 	)
 end
@@ -1436,7 +1477,7 @@ local function useAbility(player, slot, aim, aimPoint)
 					local d = enemy.Root.Position - f.Root.Position
 					d = Vector3.new(d.X, 0, d.Z)
 					d = d.Magnitude > 0.1 and d.Unit or f.Root.CFrame.LookVector
-					Fighters.Push(enemy, d * 55 + Vector3.new(0, 25, 0), 0.25)
+					Fighters.Knock(enemy, d * 55 + Vector3.new(0, 25, 0), 0.25)
 					Fighters.Fx("Impact", { Position = enemy.Root.Position, Radius = 7, Color = Color3.fromRGB(255, 220, 120), Heavy = true })
 					Fighters.Fx("Damage", { Position = enemy.Root.Position + Vector3.new(0, enemy.Root.Size.Y + 3, 0), Amount = "COMBO x3!", Color = Color3.fromRGB(255, 200, 60) })
 					Fighters.Fx("Shake", { Position = enemy.Root.Position, Intensity = 0.4, Radius = 20, Duration = 0.2 })

@@ -1048,6 +1048,7 @@ local function run(HUD, guide: boolean, startAt: number?)
 			u.Next.Text = step.Finish and "FINISH ✔" or "NEXT ▶"
 			u.Back.Visible = pos > 1
 			u.Skip.Text = guide and "close ✕" or "skip tutorial ✕"
+			u.Skip.Visible = guide or Config.TUTORIAL_SKIP == true -- (2026-10-25: o tutorial não pode ser pulado)
 			u.IconScale.Scale = 0.3
 			Kit.Tween(u.IconScale, 0.4, { Scale = 1 }, Enum.EasingStyle.Back)
 			Kit.Pop(u.Card, true)
@@ -1103,6 +1104,9 @@ local function run(HUD, guide: boolean, startAt: number?)
 		go(-1)
 	end))
 	table.insert(conns, u.Skip.Activated:Connect(function()
+		if not guide and not Config.TUTORIAL_SKIP then
+			return
+		end
 		close(guide and "guide" or "skip")
 	end))
 	table.insert(conns, u.PSkip.Activated:Connect(function()
@@ -1250,7 +1254,7 @@ local function run(HUD, guide: boolean, startAt: number?)
 		end
 		u.Panel.AnchorPoint = menuOpen and Vector2.new(0.5, 0) or Vector2.new(0.5, 1)
 		u.Panel.Position = menuOpen and UDim2.new(0.5, 0, 0, 6) or UDim2.new(0.5, 0, 1, -above)
-		u.PSkip.Visible = not menuOpen and not step.NoSkip
+		u.PSkip.Visible = not menuOpen and not step.NoSkip and Config.TUTORIAL_SKIP == true
 		u.PIcon.Rotation = math.sin(t * 3) * 6
 
 		-- seta 👉: botão dentro do menu aberto, senão o botão do HUD

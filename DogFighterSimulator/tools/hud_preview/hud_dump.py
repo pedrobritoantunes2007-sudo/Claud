@@ -87,7 +87,7 @@ parts.append(module('MusicConfig', os.path.join(SRC, 'shared', 'MusicConfig.lua'
 # 👆 (2026-10-25) flag "click_<Nome>": aperta o botão com esse nome depois de abrir o menu (ex.: menuMap,click_Map_rank)
 MENU_UI = ['DogsMenu', 'MapMenu', 'ShopMenu', 'Hatch']
 MENU_SYS = ['Inventory', 'StoreMenu', 'Progression', 'Settings', 'Codes', 'Trade', 'Quests', 'Catch',
-            'SeasonPassMenu', 'StyleMenu', 'ClanMenu', 'DonateMenu', 'WeekendEvent']  # (2026-10-25: telas novas)
+            'SeasonPassMenu', 'StyleMenu', 'ClanMenu', 'DonateMenu', 'WeekendEvent', 'HumanButton']  # (2026-10-25: telas novas)
 for name in MENU_UI:
     parts.append(module(name, os.path.join(SRC, 'client', 'UI', name + '.lua')))
 for name in MENU_SYS:
@@ -136,7 +136,7 @@ for _, n in ipairs({ "DogsMenu", "MapMenu", "ShopMenu", "Hatch" }) do
 	ms(n, ui)
 end
 local systems = folder("Systems", client)
-for _, n in ipairs({ "Inventory", "StoreMenu", "Progression", "Settings", "Codes", "Trade", "Quests", "Catch", "SeasonPassMenu", "StyleMenu", "ClanMenu", "DonateMenu", "WeekendEvent" }) do
+for _, n in ipairs({ "Inventory", "StoreMenu", "Progression", "Settings", "Codes", "Trade", "Quests", "Catch", "SeasonPassMenu", "StyleMenu", "ClanMenu", "DonateMenu", "WeekendEvent", "HumanButton" }) do
 	ms(n, systems)
 end
 ms("Abilities", systems)
@@ -791,6 +791,19 @@ for flag in pairs(FLAGS) do
 		else
 			print("ERRO|click|botão não achado: " .. name)
 		end
+	end
+end
+
+-- 🧍 botão pessoa ⇄ cachorro (canto de baixo à esquerda) — "human" = jogador já é a pessoa
+do
+	if FLAGS.human then
+		lp:SetAttribute("HumanMode", true)
+	end
+	local okH, errH = pcall(function()
+		require(systems.HumanButton).Start(HUD)
+	end)
+	if not okH then
+		print("ERRO|HumanButton|" .. tostring(errH))
 	end
 end
 

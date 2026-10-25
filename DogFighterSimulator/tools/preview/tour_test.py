@@ -308,10 +308,16 @@ resumeAll()
 resumeAll()
 check(#cashLog == 1, "prêmio não repete")
 
--- 4) pular: termina e a pessoa vira o cachorro
+-- 4) pular: (2026-10-25) proibido — Config.TUTORIAL_SKIP = false: o servidor recusa e nada muda.
+-- (ligado de novo, pular termina e a pessoa vira o cachorro)
 profiles[bia] = profile(true)
+local before = profiles[bia].Tutorial
 fire(bia, "skip")
-check(profiles[bia].Tutorial == 99 and becameDog[bia] == 1, "pular termina e vira o cachorro")
+if Config.TUTORIAL_SKIP then
+	check(profiles[bia].Tutorial == 99 and becameDog[bia] == 1, "pular termina e vira o cachorro")
+else
+	check(profiles[bia].Tutorial == before and not becameDog[bia], "não dá para pular o tutorial")
+end
 
 ---------------------------------------------------------------- roleta
 local invoke = remotes.StarterAction.OnServerInvoke

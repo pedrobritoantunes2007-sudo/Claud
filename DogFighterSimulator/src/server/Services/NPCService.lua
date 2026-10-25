@@ -230,7 +230,9 @@ local function spawnChampion(id)
 		Scale = c.Scale * 0.6,
 		StatMult = { HP = 4, Atk = 1.15 },
 		HomePos = ground,
-		HomeRadius = def.ChampionY and 12 or (def.Floating and 40 or 26),
+		-- (2026-10-25, o dono: "os bosses estão bugados, façam eles brigarem até mais longe": no chão o campeão persegue
+		-- até Config.CHAMPION_ROAM do palco; no convés do navio e no pedaço flutuante continua preso, senão cai)
+		HomeRadius = def.ChampionY and 12 or (def.Floating and 40 or Config.CHAMPION_ROAM),
 	})
 	f.Def = { Island = id, Champion = true }
 	f.Champion = true

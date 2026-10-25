@@ -22,10 +22,14 @@ local TAU = math.pi * 2
 -- câmera do título: dá voltas em volta da ilha principal, bem alto (as ilhas de raridade aparecem em volta).
 -- (2026-10-23) ABAIXO do ☁️ Reino das Nuvens (Islands.CLOUD_Y = 700): antes ela voava a 720, na altura das nuvens, e
 -- passava por dentro da ilha do céu — parecia um mapa em cima do outro.
-local CENTER = Vector3.new(0, 0, 0)
-local ORBIT_R = 980
-local ORBIT_H = 430
-local ORBIT_SPEED = 0.045 -- rad/s
+-- (2026-10-25, o dono: "o início, se a pessoa está com a renderização baixa, não mostra nada; faz de um jeito que
+-- sempre vai aparecer") a ~1000 studs, no gráfico baixo o Roblox não desenhava nada. Agora ela voa PERTO (~300
+-- studs) em volta da 🏡 Pawville — colorida, com o canil e a fonte, e é onde quem é novo começa: aparece em qualquer
+-- qualidade gráfica.
+local CENTER = require(game:GetService("ReplicatedStorage"):WaitForChild("Shared"):WaitForChild("Village")).Center
+local ORBIT_R = 275
+local ORBIT_H = 135
+local ORBIT_SPEED = 0.05 -- rad/s
 local SWOOP_TIME = 2.6
 -- ScreenGuis que continuam aparecendo durante o título (o resto some e volta depois)
 local KEEP = { TitleScreen = true }
@@ -242,7 +246,7 @@ function Title.Start()
 		local t = os.clock() - t0
 		camera.CameraType = Enum.CameraType.Scriptable
 		local pos = CENTER + Vector3.new(math.cos(angle) * ORBIT_R, ORBIT_H + math.sin(t * 0.35) * 25, math.sin(angle) * ORBIT_R)
-		camera.CFrame = CFrame.lookAt(pos, CENTER + Vector3.new(0, 40, 0))
+		camera.CFrame = CFrame.lookAt(pos, CENTER + Vector3.new(0, 15, 0))
 		camera.FieldOfView = 55
 	end)
 
@@ -422,7 +426,7 @@ function Title.Start()
 		RunService:UnbindFromRenderStep("TitleOrbit")
 		local cam = workspace.CurrentCamera
 		local from = cam.CFrame
-		local fromFocus = CENTER + Vector3.new(0, 40, 0)
+		local fromFocus = CENTER + Vector3.new(0, 15, 0)
 		local fromFov = cam.FieldOfView
 		local s0 = os.clock()
 		RunService:BindToRenderStep("TitleSwoop", Enum.RenderPriority.Camera.Value + 10, function()

@@ -32,6 +32,8 @@ Config.STARTERS = { "caramelo", "poodle", "bulldog" }
 -- 🧭 TUTORIAL DA GUIA (2026-10-23, pedido do dono): na 🌻 Puppy Meadows o jogador derrota Kills selvagens e ganha
 -- Cash e Levels (níveis a mais para o cachorro equipado) + 1 ovo de presente (Services/TutorialService)
 Config.TUTORIAL = { Kills = 2, Catches = 1, Cash = 1000, Levels = 3, Guide = "Lily" }
+-- (2026-10-25, pedido do dono: "proíbe de skipar o tutorial") false = sem botão de pular e o servidor recusa o pedido
+Config.TUTORIAL_SKIP = false
 
 -- 🦮 CAPTURA "TIPO POKÉMON" (2026-10-25, pedido do dono: "se para ter cachorro não fosse mais com ovo e sim tipo
 -- pokémon"; "faz uma loja de coleira em Pawville, o tutorial passa lá antes e a primeira que a pessoa comprar vai ser
@@ -323,6 +325,9 @@ Config.WILD_XP_MULT = 0.3 -- selvagem sem missão: sem Cash e só 30% do XP de a
 -- torno das missões). false = sem terreno/casinha no mapa, sem treino e sem renda do time; o jogador nasce na
 -- Praça dos Portais (ou na entrada da ilha onde estava). O código antigo fica guardado atrás desta chave.
 Config.HOUSES = false
+-- 🧍 (2026-10-25, pedido do dono) o avatar do jogador anda atrás do cachorro dele (Services/FollowerService); pessoa (Z):
+-- o cachorro segue a pessoa (DogService.petRoutine). false = desliga os dois
+Config.AVATAR_FOLLOWS = true
 -- 🏰 BOSS TOWER: desligada (2026-10, pedido do dono: "o lugar de boss não vai ter mais"). false = sem a torre (o
 -- rochedo do norte vira um mirante no caminho do Gêiser do Céu), sem botão BOSS, sem missões de boss da torre.
 -- O 🌍 Super Boss do Coliseu (Arena) e os 👑 campeões das ilhas continuam. O código antigo fica atrás desta chave.
@@ -398,7 +403,12 @@ Config.DASH_HIT_WIDTH = 3 -- folga (studs) além dos corpos para o dash pegar
 -- morder primeiro. AGGRO_RANGE = distância em que o selvagem vê você; AGGRO_LEASH = a partir daqui ele desiste
 -- de perseguir; AGGRO_MAX = quantos selvagens atacam o mesmo cachorro ao mesmo tempo.
 Config.AGGRO_RANGE = 40
+-- 🧱 RECUO (2026-10-25, pedido do dono: "quando os cachorros baterem não faz eles terem recuo, irem para trás... tira o
+-- recuo de todos os poderes"): false = golpe, tiro e poder NÃO empurram ninguém para trás (Fighters.Knock); jogar para
+-- CIMA e puxar para perto continuam. Os atiradores também não fogem mais de quem chega perto. true = como era antes.
+Config.KNOCKBACK = false
 Config.AGGRO_CHAMPION_RANGE = 30 -- 👑 Campeões gigantes: só quando chega perto do palco
+Config.CHAMPION_ROAM = 90 -- 👑 até onde (studs do palco) o campeão das ilhas persegue quem briga com ele (era 26)
 Config.AGGRO_LEASH = 110
 Config.AGGRO_MAX = 6
 -- ✨ Poderes (2, 3 e 4) funcionam SEM inimigo: saem onde a setinha está (até esta distância do cachorro;

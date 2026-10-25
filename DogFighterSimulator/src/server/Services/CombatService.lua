@@ -75,6 +75,12 @@ end
 -- passeio de NPC na Arena grande: passos curtos e para o lugar mais vazio entre alguns sorteios
 local function wanderPoint(f)
 	local here = f.Root.Position
+	-- 👑 campeão sem briga volta para perto do palco (a área grande, Config.CHAMPION_ROAM, é só para perseguir)
+	if f.Champion and f.HomePos then
+		local a = rng:NextNumber(0, math.pi * 2)
+		local r = rng:NextNumber(0, math.min(18, f.HomeRadius or 18))
+		return Vector3.new(f.HomePos.X + math.cos(a) * r, here.Y, f.HomePos.Z + math.sin(a) * r)
+	end
 	local best, bestScore = nil, -math.huge
 	for i = 1, 4 do
 		local p
@@ -394,7 +400,8 @@ local function think(f, now)
 		hum:MoveTo(p)
 		return
 	end
-	if f.Kind ~= "boss" and hpPct < 0.3 and rng:NextNumber() < 0.025 then
+	-- (🧱 2026-10-25: sem recuo — Config.KNOCKBACK — ninguém foge mais quando está fraco)
+	if Config.KNOCKBACK and f.Kind ~= "boss" and hpPct < 0.3 and rng:NextNumber() < 0.025 then
 		f.RetreatUntil = now + rng:NextNumber(1, 1.8)
 		return
 	end
@@ -425,9 +432,19 @@ local function think(f, now)
 		else
 			setRunSpeed(f, false)
 			-- perto demais: recua; senão circula o alvo na distância boa
+			-- (🧱 2026-10-25, sem recuo: o atirador NÃO se afasta de quem chega perto — anda de lado na distância em que está,
+			-- e colado no alvo fica parado atirando, para dar para chegar nele)
 			local angle = (dist < 9 and 0.2 or 0.6) * f.Orbit
 			local rotated = Vector3.new(rel.X * math.cos(angle) - rel.Z * math.sin(angle), 0, rel.X * math.sin(angle) + rel.Z * math.cos(angle))
-			goal = tp + rotated * want
+			local keep = want
+			if not Config.KNOCKBACK then
+				keep = math.min(want, Fighters.FlatDistance(f.Root.Position, tp))
+			end
+			if not Config.KNOCKBACK and dist < 4 then
+				goal = f.Root.Position
+			else
+				goal = tp + rotated * keep
+			end
 		end
 		hum:MoveTo(clampToZone(f, goal, 4))
 		return

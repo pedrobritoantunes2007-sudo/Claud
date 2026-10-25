@@ -588,7 +588,7 @@ function Kit:knock(target, from, power, lift)
 	if A(target) and not target.Dummy then
 		local d = flat(target.Root.Position - from)
 		d = d.Magnitude > 0.1 and d.Unit or flat(self.f.Root.CFrame.LookVector)
-		Fighters.Push(target, d * power + UP * (lift or 15), 0.2)
+		Fighters.Knock(target, d * power + UP * (lift or 15), 0.2)
 	end
 end
 

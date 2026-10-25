@@ -125,7 +125,7 @@ return function(Specials, Fighters)
 			-- joga longe, para trás (de quem soltou)
 			local away = flat(t.Root.Position - f.Root.Position)
 			away = away.Magnitude > 0.1 and away.Unit or Vector3.new(1, 0, 0)
-			Fighters.Push(t, away * 70 + Vector3.new(0, 22, 0), 0.25)
+			Fighters.Knock(t, away * 70 + Vector3.new(0, 22, 0), 0.25)
 		elseif id == "Fly" then
 			-- uma pena-lâmina desce do céu e acerta de novo
 			task.delay(0.4, function()
