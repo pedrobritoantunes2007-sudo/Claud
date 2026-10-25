@@ -13,6 +13,7 @@ local DogData = require(ReplicatedStorage.Shared.DogData)
 local Islands = require(ReplicatedStorage.Shared.Islands)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local MapTiles = require(ReplicatedStorage.Shared.MapTiles)
+local RankIsland = require(ReplicatedStorage.Shared.RankIsland)
 local Village = require(ReplicatedStorage.Shared.Village)
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
@@ -25,14 +26,16 @@ local make = Kit.make
 
 local player = Players.LocalPlayer
 
--- destinos: 🏡 Pawville (ilha de entrada), a ilha principal e o Coliseu, depois as ilhas na ordem da aventura
-local DESTS = { Village.Id, "main", "colosseum" }
+-- destinos: 🏡 Pawville (ilha de entrada), a ilha principal, o Coliseu e a 🏆 Ilha do Ranking (2026-10-25), depois as
+-- ilhas na ordem da aventura
+local DESTS = { Village.Id, "main", "colosseum", RankIsland.Id }
 for _, id in ipairs(Islands.ORDER) do
 	table.insert(DESTS, id)
 end
 -- ícone desenhado de cada lugar
 local ICON = {
 	[Village.Id] = "house",
+	[RankIsland.Id] = "trophy",
 	main = "home",
 	colosseum = "sword",
 	common = "flower",
@@ -48,6 +51,7 @@ local EXTRA = {
 	main = { Name = "Home Island", Color = Islands.COLORS.main, Sub = "Portals to every island" },
 	colosseum = { Name = "Colosseum", Color = C.Red, Sub = "Super Boss · PvP" },
 	[Village.Id] = { Name = Village.Name, Color = Village.Color, Sub = "Start village · Kennel · Safe zone" },
+	[RankIsland.Id] = { Name = RankIsland.Name, Color = RankIsland.Color, Sub = "Leaderboards · Best clans · Season Pass" },
 }
 -- onde fica o botão de cada lugar no mapa (mundo)
 local function destPos(id)
@@ -57,12 +61,14 @@ local function destPos(id)
 		return Vector3.new(0, 0, 0)
 	elseif id == Village.Id then
 		return Village.Center
+	elseif id == RankIsland.Id then
+		return RankIsland.Center
 	end
 	return Islands.List[id].Center
 end
 
 local function opened(id)
-	if id == "main" or id == "colosseum" or id == "common" or id == Village.Id then
+	if id == "main" or id == "colosseum" or id == "common" or id == Village.Id or id == RankIsland.Id then
 		return true
 	end
 	local p = Net.Profile
@@ -235,6 +241,43 @@ function MapMenu.Start(HUD)
 			ink(d)
 		end
 	end
+	-- 🏆 (2026-10-25) quadrinho da Ilha do Ranking (canto de cima, à esquerda: ela fica sozinha, bem ao norte)
+	local rankInset = make("TextButton", {
+		Name = "Map_" .. RankIsland.Id,
+		Position = UDim2.fromOffset(8, 8),
+		Size = UDim2.fromOffset(INSET_W, INSET_H),
+		BackgroundColor3 = WorldMap.OCEAN,
+		BorderSizePixel = 0,
+		AutoButtonColor = false,
+		Text = "",
+		ClipsDescendants = true,
+		ZIndex = 40,
+	}, canvas)
+	Kit.Corner(rankInset, 10)
+	local rankRing = ink(rankInset, 3)
+	local rankPhoto = make("ImageLabel", {
+		AnchorPoint = Vector2.new(0.5, 0.5),
+		Position = UDim2.fromScale(0.5, 0.45),
+		Size = UDim2.fromScale(1, 1),
+		SizeConstraint = Enum.SizeConstraint.RelativeXX,
+		BackgroundTransparency = 1,
+		ZIndex = 41,
+	}, rankInset)
+	if not WorldMap.BindTile(rankPhoto, RankIsland.Id) then
+		rankPhoto.Visible = false
+		Icons.Make(rankInset, "trophy", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromScale(0.5, 0.42),
+			Size = UDim2.fromScale(0.55, 0.55),
+			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+			ZIndex = 42,
+		})
+	end
+	-- quadrinhos (fora do desenho do mapa): o botão, o anel e onde vai o nome de cada um
+	local INSETS = {
+		[Village.Id] = { Button = inset, Ring = insetRing, Name = Village.Name },
+		[RankIsland.Id] = { Button = rankInset, Ring = rankRing, Name = "Ranking" },
+	}
 
 	---------------------------------------------------------- cada lugar: área de clique em cima da ilha + nome embaixo
 	local markers = {}
@@ -254,13 +297,14 @@ function MapMenu.Start(HUD)
 		local def = Islands.List[id]
 		local nameText = EXTRA[id] and EXTRA[id].Name or (def and def.Name) or id
 		local m = { Id = id }
-		if id == Village.Id then
-			m.Button, m.Ring = inset, insetRing
-			m.Name = Kit.Text(inset, {
+		local box = INSETS[id]
+		if box then
+			m.Button, m.Ring = box.Button, box.Ring
+			m.Name = Kit.Text(box.Button, {
 				AnchorPoint = Vector2.new(0.5, 1),
 				Position = UDim2.new(0.5, 0, 1, -2),
 				Size = UDim2.new(1, -6, 0, 16),
-				Text = nameText,
+				Text = box.Name,
 				Font = Kit.Title,
 				ZIndex = 44,
 			})
@@ -295,9 +339,9 @@ function MapMenu.Start(HUD)
 			})
 		end
 		-- (o cadeado pequeno vai colado no nome — Kit.LeadIcon — quando a ilha está trancada) e o alfinete em cima
-		m.Here = Icons.Make(id == Village.Id and inset or center, "pin", {
+		m.Here = Icons.Make(box and box.Button or center, "pin", {
 			AnchorPoint = Vector2.new(0.5, 1),
-			Position = id == Village.Id and UDim2.fromScale(0.5, 0.42) or m.Button.Position,
+			Position = box and UDim2.fromScale(0.5, 0.42) or m.Button.Position,
 			Size = UDim2.fromOffset(24, 24),
 			ZIndex = 45,
 			Visible = false,
@@ -416,7 +460,7 @@ function MapMenu.Start(HUD)
 			end
 			m.Here.Visible = here == id
 			local chosen = selected == id or highlight == id
-			if id == Village.Id then
+			if INSETS[id] then
 				m.Ring.Color = chosen and C.Gold or Kit.INK
 				m.Ring.Thickness = chosen and 4 or 3
 			else

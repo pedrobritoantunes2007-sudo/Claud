@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Islands = require(ReplicatedStorage.Shared.Islands)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local MapTiles = require(ReplicatedStorage.Shared.MapTiles)
+local RankIsland = require(ReplicatedStorage.Shared.RankIsland)
 local Village = require(ReplicatedStorage.Shared.Village)
 
 local WorldMap = {}
@@ -41,6 +42,7 @@ local THEME = {
 	divine = { Ground = rgb(0xffd56b), Beach = rgb(0xfff0c2) },
 	cloud = { Ground = rgb(0xffffff), Beach = rgb(0xd9efff) },
 	village = { Ground = rgb(0x8fe065), Beach = rgb(0xf3d99b) },
+	rank = { Ground = rgb(0x7ed957), Beach = rgb(0xf3d99b) },
 }
 WorldMap.THEME = THEME
 local STONE = rgb(0xcfc7bd)
@@ -221,6 +223,9 @@ local function drawMainIsland(pen)
 		pen:portal(p.X, p.Z, Islands.SWIRL[id] or STONE)
 	end
 	pen:portal(pv.X, pv.Z, Village.Color)
+	-- 🏆 (2026-10-25) portal da Ilha do Ranking (na praça, no mesmo anel)
+	local ra = math.rad(RankIsland.PLAZA_ANGLE)
+	pen:portal(math.cos(ra) * Layout.PORTAL_RING, math.sin(ra) * Layout.PORTAL_RING, RankIsland.Color)
 end
 
 local function drawVillage(pen)
@@ -266,6 +271,24 @@ local function drawVillage(pen)
 	pen:portal(ax, az, rgb(0xff6b6b))
 	local mx, mz = at(Village.MEADOWS_PORTAL.X, Village.MEADOWS_PORTAL.Z)
 	pen:portal(mx, mz, Islands.SWIRL.common or STONE)
+	-- 🏆 (2026-10-25) portal da Ilha do Ranking
+	local rx, rz = at(RankIsland.VILLAGE_PORTAL.X, RankIsland.VILLAGE_PORTAL.Z)
+	pen:portal(rx, rz, RankIsland.Color)
+end
+
+-- 🏆 (2026-10-25) Ilha do Ranking: ilhota redonda ao norte com a Praça dos Campeões (pedra), o pódio dourado no meio
+-- e os 2 portais de volta (⚔️ ilha principal e 🏡 Pawville)
+local function drawRankIsland(pen)
+	local c = RankIsland.Center
+	pen:island({ { c.X, c.Z, RankIsland.R } }, THEME.rank)
+	pen:circle(c.X, c.Z, RankIsland.PLAZA_R + 6, INK, 5)
+	pen:circle(c.X, c.Z, RankIsland.PLAZA_R, STONE, 6)
+	pen:circle(c.X, c.Z, 24, INK, 7)
+	pen:circle(c.X, c.Z, 18, RankIsland.Color, 8)
+	for _, portal in ipairs(RankIsland.PORTALS) do
+		local p = RankIsland.ToWorld(portal.X, 0, portal.Z)
+		pen:portal(p.X, p.Z, portal.To == Village.Id and Village.Color or rgb(0xff6b6b))
+	end
 end
 
 ---------------------------------------------------------------- API
@@ -347,6 +370,8 @@ function WorldMap.Build(parent, scale, box, origin)
 	end
 	group(Village.Id)
 	drawVillage(pen)
+	group(RankIsland.Id)
+	drawRankIsland(pen)
 	-- Reino das Nuvens por último (fica no céu, transparente por cima do mar)
 	if Islands.List.cloud then
 		group("cloud", 2)

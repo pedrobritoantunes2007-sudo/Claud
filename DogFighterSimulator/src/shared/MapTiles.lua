@@ -5,6 +5,7 @@
 -- fotos por cima do desenho (UI/WorldMap); sem número (0) ou enquanto a foto carrega, fica o desenho.
 -- Cada foto é QUADRADA: centro (X, Z) no mundo e Span studs de lado (norte = −Z para cima, leste = +X à direita).
 local Islands = require(script.Parent.Islands)
+local RankIsland = require(script.Parent.RankIsland)
 local Village = require(script.Parent.Village)
 
 local MapTiles = {}
@@ -25,6 +26,8 @@ MapTiles.List = {
 	-- ilha principal: do gêiser do céu (norte) até a praia do portal da Pawville (sul)
 	{ Key = "main", X = 0, Z = -250, Span = 2000 },
 	{ Key = "village", X = Village.Center.X, Z = Village.Center.Z, Span = 1240 },
+	-- 🏆 (2026-10-25) Ilha do Ranking (sozinha ao norte)
+	{ Key = RankIsland.Id, X = RankIsland.Center.X, Z = RankIsland.Center.Z, Span = 540 },
 }
 for _, id in ipairs(Islands.ORDER) do
 	local def = Islands.List[id]
@@ -46,6 +49,7 @@ MapTiles.IDS = {
 	mythic = 0 --[[ID_Map]],
 	divine = 0 --[[ID_Map]],
 	cloud = 0 --[[ID_Map]],
+	rank = 0 --[[ID_Map]],
 }
 
 MapTiles.ByKey = {}

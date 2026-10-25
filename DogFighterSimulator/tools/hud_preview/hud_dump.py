@@ -84,6 +84,7 @@ parts.append(module('GuideTour', os.path.join(SRC, 'client', 'Systems', 'GuideTo
 parts.append(module('Starter', os.path.join(SRC, 'client', 'Systems', 'Starter.lua')))
 parts.append(module('MusicConfig', os.path.join(SRC, 'shared', 'MusicConfig.lua')))
 # 🎨 menus (flag "menu<Nome>": abre o menu de verdade por cima do HUD, ex.: menuDogs, menuInventario, menuLoja)
+# 👆 (2026-10-25) flag "click_<Nome>": aperta o botão com esse nome depois de abrir o menu (ex.: menuMap,click_Map_rank)
 MENU_UI = ['DogsMenu', 'MapMenu', 'ShopMenu', 'Hatch']
 MENU_SYS = ['Inventory', 'StoreMenu', 'Progression', 'Settings', 'Codes', 'Trade', 'Quests', 'Catch',
             'SeasonPassMenu', 'StyleMenu', 'ClanMenu', 'DonateMenu', 'WeekendEvent']  # (2026-10-25: telas novas)
@@ -772,6 +773,23 @@ for flag in pairs(FLAGS) do
 		end)
 		if not okM then
 			print("ERRO|menu " .. name .. "|" .. tostring(errM))
+		end
+	end
+end
+
+-- 👆 "click_<Nome>": aperta o botão com esse nome (depois de abrir o menu), ex.: "menuMap,click_Map_rank"
+for flag in pairs(FLAGS) do
+	local name = string.match(flag, "^click_([%w_]+)$")
+	if name then
+		local button = GUI.playerGui:FindFirstChild(name, true)
+		if button and button:IsA("GuiButton") then
+			button.Activated:Fire()
+			for _ = 1, 3 do
+				SERVICES.RunService.Heartbeat:Fire(1 / 60)
+				SERVICES.RunService.RenderStepped:Fire(1 / 60)
+			end
+		else
+			print("ERRO|click|botão não achado: " .. name)
 		end
 	end
 end

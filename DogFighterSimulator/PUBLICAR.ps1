@@ -289,7 +289,7 @@ try {
     # (o .bat pode estar na pasta do projeto ou ao lado dela, como vem nos zips)
     $mapDir = Join-Path (Join-Path $here 'Imagens') 'Mapa'
     if (-not (Test-Path $mapDir)) { $mapDir = Join-Path (Join-Path (Join-Path $here 'DogFighterSimulator') 'Imagens') 'Mapa' }
-    $mapKeys = @('main', 'village', 'common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'divine', 'cloud')
+    $mapKeys = @('main', 'village', 'common', 'uncommon', 'rare', 'epic', 'legendary', 'mythic', 'divine', 'cloud', 'rank')
     foreach ($k in $mapKeys) {
         $idKey = 'Map_' + $k
         if ($ids[$idKey]) { Say "   ja enviada: mapa $k -> $($ids[$idKey])" 'DarkGray'; continue }

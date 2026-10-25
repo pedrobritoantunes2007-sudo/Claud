@@ -6,6 +6,7 @@
 --   📖 DexRewards: marcos 10/25/50 e raridade completa (sem boss e sem exclusivo)
 --   🎩 Accessories: 4 lugares, todo item tem desenho, bônus somado com teto
 --   🐶 Config.Stats com o cachorro do perfil (Gold mais forte) e o exclusivo fora dos sorteios
+--   🗺️ MapTiles: a foto de cima da Ilha do Ranking cobre a ilha e não encosta nas outras fotos
 -- Uso: python3 tools/preview/run_shared.py tools/preview/novidades_test.luau
 local Layout = require(Shared.Layout)
 local Islands = require(Shared.Islands)
@@ -226,6 +227,21 @@ for _, item in ipairs(Monetization.Items) do
 	end
 end
 check(#donate == 6, "6 valores de doação")
+
+---------------------------------------------------------------- 🗺️ a Ilha do Ranking no mapa (foto de cima)
+local MapTiles = require(Shared.MapTiles)
+local rankTile = MapTiles.ByKey[RankIsland.Id]
+check(rankTile ~= nil and MapTiles.IDS[RankIsland.Id] ~= nil, "MAPA: foto da Ilha do Ranking (com lugar para o ID)")
+if rankTile then
+	check(rankTile.X == RankIsland.Center.X and rankTile.Z == RankIsland.Center.Z, "MAPA: foto no centro da ilha")
+	check(rankTile.Span / 2 > RankIsland.R + 20, "MAPA: a foto cobre a ilha inteira com a praia")
+	for _, other in ipairs(MapTiles.List) do
+		if other ~= rankTile then
+			local gap = math.max(math.abs(other.X - rankTile.X), math.abs(other.Z - rankTile.Z)) - (other.Span + rankTile.Span) / 2
+			check(gap > 0, "MAPA: a foto do ranking não encosta na de " .. other.Key)
+		end
+	end
+end
 
 print(string.format("RESULTADO: %d ok, %d falharam", oks, fails))
 if fails > 0 then

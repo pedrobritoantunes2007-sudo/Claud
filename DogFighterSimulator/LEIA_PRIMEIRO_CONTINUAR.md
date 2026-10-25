@@ -27,7 +27,10 @@
   - 🏆 ILHA DO RANKING (`Shared/RankIsland`, `World/RankIsland.lua`, centro 0,0,−4300): os 6 PLACARES só ficam lá
     (`LeaderboardService` reescrito): Strongest, Weekly Wins, Most Catches, Most Complete Dex, Best Clans (semana) e
     Season Pass. Portais: praça da ilha principal (`MainIsland.RankPortalCFrame`, ângulo 120°) e Pawville
-    (`RankIsland.VILLAGE_PORTAL`, ao lado do fim da rua principal, placa 🏆 RANKING na seta). O chip da ilha no HUD mostra o nome dela.
+    (`RankIsland.VILLAGE_PORTAL`, ao lado do fim da rua principal, placa 🏆 RANKING na seta). O chip da ilha no HUD mostra o nome dela. No MAPA: quadrinho "Ranking" no
+    canto de cima (botão GO → `IslandAction travel rank`) e desenho no minimapa (`UI/WorldMap`); foto de cima
+    `Imagens/Mapa/rank.png` (`MapTiles`, chave `rank` no `$mapKeys` do PUBLICAR). As fotos `main.png` e `village.png`
+    foram refeitas com os portais novos (`tools/preview/map_tiles.py`).
   - ✨ SHINY (`Shared/Variants`): 1 em 500 selvagens nasce shiny (brilho + cor), aviso para o servidor inteiro, continua
     shiny quando capturado (`dog.Shiny`), +15% de força. 🧬 EVOLUIR (`Services/EvolveService`, botão EVOLVE no DOGS):
     3 iguais (mesma espécie e mesma versão) → 1 GOLD (×1.6); 3 GOLD → 1 RAINBOW (×2.5). O novo fica com o MAIOR level
