@@ -18,6 +18,7 @@ local DogData = require(ReplicatedStorage.Shared.DogData)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Islands = require(ReplicatedStorage.Shared.Islands)
 local Village = require(ReplicatedStorage.Shared.Village)
+local Variants = require(ReplicatedStorage.Shared.Variants)
 local DataService = require(script.Parent.DataService)
 local PlotService = require(script.Parent.PlotService)
 local Fighters = require(script.Parent.Fighters)
@@ -420,11 +421,13 @@ function DogService.Spawn(player, at, keepPlace, trainerOnly)
 		SpeciesId = dog.Species,
 		Level = dog.Level,
 		Kind = "player",
-		SpeedBonus = passMult(player, "SpeedMult"), -- 💨 passe Speedy Paws
+		SpeedBonus = passMult(player, "SpeedMult"), -- 💨 passe Speedy Paws (+ acessórios de velocidade)
 		Owner = player,
 		DisplayName = dog.Name,
 		CFrame = cf,
 		Zone = "home",
+		Variant = Variants.IsSpecial(dog) and { Shiny = dog.Shiny, Tier = dog.Tier } or nil, -- ✨🥇🌈
+		Accessories = type(data.Acc) == "table" and data.Acc.On or nil, -- 🎩 todo mundo vê
 	})
 	f.Uid = dog.Id
 	f.Mode = s.Mode
@@ -893,7 +896,8 @@ local function releaseDog(player, uid)
 	end
 	local rarity = Config.RARITY[DogData.Species[dog.Species].Rarity]
 	local cashMult = mults(player)
-	local cash = math.floor(rarity.Release * (1 + dog.Level * 0.05) * cashMult)
+	-- (✨ shiny / 🥇 Gold / 🌈 Rainbow valem mais — Shared/Variants)
+	local cash = math.floor(rarity.Release * (1 + dog.Level * 0.05) * cashMult * Variants.ValueMult(dog))
 	data.Dogs[uid] = nil
 	DataService.AddCash(player, cash, "release")
 	return true, "Released! +$" .. Config.Format(cash)
@@ -936,6 +940,7 @@ local function sellDogs(player, action, rarities, keepBest)
 			and rarities[rarityId] == true
 			and uid ~= data.Equipped
 			and not dog.Fav
+			and not Variants.IsSpecial(dog) -- (✨ shiny / 🥇 Gold / 🌈 Rainbow nunca saem na venda em massa)
 			and (best[dog.Species] ~= uid or not (keepBest or Config.RARITY[rarityId].Order >= ALWAYS_KEEP_ONE))
 		then
 			table.insert(toSell, uid)
@@ -1557,7 +1562,7 @@ end
 local function onLevelUp(player, dog, oldLevel)
 	local f = DogService.GetFighter(player)
 	if f and f.Uid == dog.Id and Fighters.Alive(f) then
-		local stats = Config.Stats(f.Species, dog.Level)
+		local stats = Config.Stats(f.Species, dog.Level, f.Variant)
 		stats.Speed *= Config.PLAYER_SPEED_MULT * passMult(player, "SpeedMult") -- (igual ao Fighters.Spawn do cachorro do jogador)
 		local pct = f.Humanoid.Health / f.Humanoid.MaxHealth
 		f.Stats = stats

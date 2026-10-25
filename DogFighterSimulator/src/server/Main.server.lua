@@ -49,6 +49,12 @@ local REMOTES = {
 	QuestAction = "RemoteFunction", -- 📜 ("accept", islandId, "normal"|"boss") | ("abandon") -> ok, mensagem
 	StarterAction = "RemoteFunction", -- 🎓 1º cachorro: ("state") | ("keep", nome, espécie escolhida) | ("paidspin", sorte) -> ok, resultado
 	CatchAction = "RemoteFunction", -- 🦮 captura: ("state") | ("buy", coleira, n) | ("throw", coleira, idDoSelvagem) -> ok, resultado
+	-- (2026-10-25) novidades: 🧬 evoluir, 🎩 acessórios, 🎟️ passe de temporada, 🐺 clãs
+	EvolveAction = "RemoteFunction", -- 🧬 ("preview"|"evolve", uid) -> ok, resultado (Services/EvolveService)
+	AccessoryAction = "RemoteFunction", -- 🎩 ("buy"|"equip", id) | ("unequip", lugar) -> ok, mensagem (Services/AccessoryService)
+	SeasonAction = "RemoteFunction", -- 🎟️ ("claim", nível, "free"|"premium") | ("claimall") -> ok, mensagem (Services/SeasonPassService)
+	ClanAction = "RemoteFunction", -- 🐺 ("state"|"create"|"invite"|"accept"|"decline"|"join"|"leave"|"kick"|"open", ...) (Services/ClanService)
+	ClanEvent = "RemoteEvent", -- 🐺 servidor -> cliente: ("invite", convite) | ("changed")
 }
 
 -- 🐶 o personagem do jogador é o cachorro (DogService põe o modelo em player.Character). O avatar do
@@ -170,6 +176,16 @@ end)
 step("VoiceService", function()
 	require(Services.VoiceService).Start(remotes)
 end)
+-- (2026-10-25) 🧬 evoluir · 🎩 acessórios · 🎉 eventos de fim de semana
+step("EvolveService", function()
+	require(Services.EvolveService).Start(remotes)
+end)
+step("AccessoryService", function()
+	require(Services.AccessoryService).Start(remotes)
+end)
+step("EventService", function()
+	require(Services.EventService).Start(remotes)
+end)
 step("MonetizationService", function()
 	MonetizationService.Start(remotes)
 end)
@@ -199,6 +215,13 @@ step("TradeService", function()
 end)
 step("ProgressionService", function()
 	require(Services.ProgressionService).Start(remotes)
+end)
+-- 🎟️ passe de temporada e 🐺 clãs (depois do Progression e da captura: ouvem os dois)
+step("SeasonPassService", function()
+	require(Services.SeasonPassService).Start(remotes)
+end)
+step("ClanService", function()
+	require(Services.ClanService).Start(remotes)
 end)
 step("CodeService", function()
 	require(Services.CodeService).Start(remotes)

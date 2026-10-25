@@ -19,11 +19,13 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local DogData = require(ReplicatedStorage.Shared.DogData)
 local Islands = require(ReplicatedStorage.Shared.Islands)
 local Signal = require(ReplicatedStorage.Shared.Signal)
+local WeekendEvents = require(ReplicatedStorage.Shared.WeekendEvents)
+local Accessories = require(ReplicatedStorage.Shared.Accessories)
 local DataService = require(script.Parent.DataService)
 local Fighters = require(script.Parent.Fighters)
 
 local CatchService = {}
-CatchService.Caught = Signal.new() -- (player, speciesId, level)
+CatchService.Caught = Signal.new() -- (player, speciesId, level, shiny)
 
 -- tempo da animação no cliente: voo da coleira + cada balançada + o final
 CatchService.FLY = 0.45
@@ -117,7 +119,19 @@ local function luckOf(player)
 	return 0
 end
 
-local function finish(player, target, success, speciesId, level)
+-- multiplicador da chance: 🎉 fim de semana 2x CATCH × 🎩 acessórios de captura
+local function catchMult(data)
+	local m = 1
+	if WeekendEvents.IsActive("Catch2x") then
+		m *= WeekendEvents.CATCH_MULT
+	end
+	local acc = type(data.Acc) == "table" and data.Acc.On or nil
+	m *= 1 + Accessories.Bonus(acc).Catch
+	return m
+end
+CatchService.ChanceMult = catchMult
+
+local function finish(player, target, success, speciesId, level, shiny)
 	catching[target] = nil
 	if not success then
 		-- escapou: volta a lutar (bravo com quem jogou a coleira)
@@ -143,23 +157,29 @@ local function finish(player, target, success, speciesId, level)
 	if not player.Parent then
 		return
 	end
-	local dog, err = DataService.AddDog(player, speciesId, nil, level)
+	-- ✨ selvagem shiny capturado continua shiny
+	local dog, err = DataService.AddDog(player, speciesId, nil, level, shiny and { Shiny = true } or nil)
 	if not dog then
 		remotes.Notify:FireClient(player, tostring(err or "Couldn't add the dog"), "red")
 		return
 	end
+	local data = DataService.Get(player)
+	if data then
+		data.Catches = (tonumber(data.Catches) or 0) + 1 -- (placar 🦮 MOST CATCHES da Ilha do Ranking)
+	end
 	local species = DogData.Species[speciesId]
 	local rarity = Config.RARITY[species.Rarity]
-	remotes.Notify:FireClient(player, "🦮 GOTCHA! " .. species.Name .. " Lv." .. level .. " (" .. rarity.Label .. ") joined your team! See it in 🐶 DOGS.", "gold")
-	-- sorte grande: o servidor inteiro fica sabendo
-	if rarity.Order >= Config.RARITY.Legendary.Order then
+	local what = (shiny and "SHINY " or "") .. species.Name
+	remotes.Notify:FireClient(player, (shiny and "✨ SHINY GOTCHA! " or "🦮 GOTCHA! ") .. what .. " Lv." .. level .. " (" .. rarity.Label .. ") joined your team! See it in 🐶 DOGS.", "gold")
+	-- sorte grande (ou shiny): o servidor inteiro fica sabendo
+	if shiny or rarity.Order >= Config.RARITY.Legendary.Order then
 		for _, p in ipairs(Players:GetPlayers()) do
 			if p ~= player then
-				remotes.Notify:FireClient(p, "🦮 " .. player.DisplayName .. " caught a " .. rarity.Label .. " " .. species.Name .. "!", "gold")
+				remotes.Notify:FireClient(p, (shiny and "✨ " or "🦮 ") .. player.DisplayName .. " caught a " .. (shiny and "SHINY " or "") .. rarity.Label .. " " .. species.Name .. "!", "gold")
 			end
 		end
 	end
-	CatchService.Caught:Fire(player, speciesId, level)
+	CatchService.Caught:Fire(player, speciesId, level, shiny == true)
 end
 
 local function throw(player, leashId, targetId)
@@ -215,7 +235,7 @@ local function throw(player, leashId, targetId)
 
 	local hpPct = target.Humanoid.Health / math.max(1, target.Humanoid.MaxHealth)
 	local myLevel = mine.Level or 1
-	local chance = Config.CatchChance(species.Rarity, hpPct, leash.Mult, (target.Level or 1) - myLevel, luckOf(player), champion)
+	local chance = Config.CatchChance(species.Rarity, hpPct, leash.Mult, (target.Level or 1) - myLevel, luckOf(player), champion, catchMult(data))
 	if Config.TutorialCatch(data) then
 		chance = 1 -- 🎓 a 1ª captura do tutorial sempre dá certo
 	end
@@ -236,8 +256,9 @@ local function throw(player, leashId, targetId)
 	target.Aggro = nil
 	pcall(Fighters.EndDuel, target)
 	local speciesId, level = target.SpeciesId, target.Level or 1
+	local shiny = type(target.Variant) == "table" and target.Variant.Shiny == true
 	task.delay(CatchService.FLY + math.max(1, shakes) * CatchService.SHAKE + CatchService.END, function()
-		local ok, err = pcall(finish, player, target, success, speciesId, level)
+		local ok, err = pcall(finish, player, target, success, speciesId, level, shiny)
 		if not ok then
 			warn("[CatchService] finish:", err)
 		end
@@ -250,6 +271,7 @@ local function throw(player, leashId, targetId)
 		Species = speciesId,
 		Name = species.Name,
 		Level = level,
+		Shiny = shiny or nil,
 		Leash = leashId,
 		Island = island and Islands.List[island] and Islands.List[island].Name or nil,
 	}

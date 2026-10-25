@@ -17,6 +17,8 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Islands = require(ReplicatedStorage.Shared.Islands)
 local DogData = require(ReplicatedStorage.Shared.DogData)
 local Layout = require(ReplicatedStorage.Shared.Layout)
+local Variants = require(ReplicatedStorage.Shared.Variants)
+local Accessories = require(ReplicatedStorage.Shared.Accessories)
 
 -- ninho: o limite real (com gamepass de slots extras) é aplicado pelo EggService; aqui só o teto físico
 local EGG_HARD_CAP = math.max(Config.EGG_CAP, #Layout.PLOT.Eggs)
@@ -99,6 +101,8 @@ local function newProfile()
 		Progress = {}, -- missões, conquistas, login diário (validado pelo ProgressionService)
 		Discovered = {}, -- [speciesId] = true: espécies que o jogador já teve (Dog Index)
 		Islands = { common = true }, -- 🏝️ ilhas abertas ([id] = true); a Puppy Meadows já vem aberta
+		Acc = { Owned = {}, On = {} }, -- 🎩 acessórios comprados e o que está no cachorro (AccessoryService)
+		Catches = 0, -- 🦮 cachorros capturados (placar da 🏆 Ilha do Ranking)
 	}
 end
 
@@ -347,6 +351,9 @@ local function sanitize(data)
 				Level = num(dog.Level, 1, 1, Config.MAX_LEVEL),
 				XP = num(dog.XP, 0, 0),
 				Fav = dog.Fav == true,
+				-- ✨ shiny e 🥇 Gold (1) / 🌈 Rainbow (2) — Shared/Variants
+				Shiny = dog.Shiny == true or nil,
+				Tier = (num(dog.Tier, 0, 0, Variants.MAX_TIER) > 0) and num(dog.Tier, 0, 0, Variants.MAX_TIER) or nil,
 			}
 			dogs[uid].Stars = Config.StarsFor(dogs[uid].Level)
 			maxUid = math.max(maxUid, tonumber(uid) or 0)
@@ -543,6 +550,40 @@ local function sanitize(data)
 	data.LeashGift = data.LeashGift == true
 	data.GuideCatch = num(data.GuideCatch, 0, 0, 99)
 	data.FreeSpinDay = num(data.FreeSpinDay, 0, 0)
+	-- 🎩 acessórios: só os que existem; equipado só se for seu e do lugar certo
+	local acc = type(data.Acc) == "table" and data.Acc or {}
+	local owned, on = {}, {}
+	if type(acc.Owned) == "table" then
+		for id, v in pairs(acc.Owned) do
+			if v == true and Accessories.Get(id) then
+				owned[id] = true
+			end
+		end
+	end
+	if type(acc.On) == "table" then
+		for _, slot in ipairs(Accessories.SLOTS) do
+			local item = Accessories.Get(acc.On[slot])
+			if item and item.Slot == slot and owned[item.Id] then
+				on[slot] = item.Id
+			end
+		end
+	end
+	data.Acc = { Owned = owned, On = on }
+	data.Catches = num(data.Catches, 0, 0)
+	data.Evolves = num(data.Evolves, 0, 0)
+	-- 🎟️ títulos ganhos fora das conquistas (Passe de Temporada)
+	local titles, nTitles = {}, 0
+	if type(data.ExtraTitles) == "table" then
+		for title, v in pairs(data.ExtraTitles) do
+			if v == true and type(title) == "string" and #title <= 40 and nTitles < 40 then
+				titles[title] = true
+				nTitles += 1
+			end
+		end
+	end
+	data.ExtraTitles = nTitles > 0 and titles or nil
+	-- 🐺 clã (ClanService confere no DataStore dos clãs quando o jogador entra)
+	data.Clan = (type(data.Clan) == "string" and #data.Clan > 0 and #data.Clan <= 64) and data.Clan or nil
 	data.Session = nil
 	data.Carried = data.Carried == true or nil -- 🔄 já trouxe o que era pago do save antigo
 	return data
@@ -868,7 +909,8 @@ function DataService.DogCount(data)
 end
 
 -- level (opcional): 🦮 cachorro capturado vem no level do selvagem
-function DataService.AddDog(player, speciesId, name, level)
+-- extra (opcional): { Shiny = true, Tier = 1|2 } — ✨ selvagem shiny capturado continua shiny (Shared/Variants)
+function DataService.AddDog(player, speciesId, name, level, extra)
 	local data = profiles[player]
 	if not (data and DogData.Species[speciesId]) then
 		return nil
@@ -879,6 +921,11 @@ function DataService.AddDog(player, speciesId, name, level)
 	local uid = DataService.NewUid(data)
 	local lv = math.clamp(math.floor(tonumber(level) or 1), 1, Config.MAX_LEVEL)
 	local dog = { Id = uid, Species = speciesId, Name = name or DogData.Species[speciesId].Name, Level = lv, XP = 0, Fav = false, Stars = Config.StarsFor(lv) }
+	if type(extra) == "table" then
+		dog.Shiny = extra.Shiny == true or nil
+		local tier = Variants.TierOf(extra)
+		dog.Tier = tier > 0 and tier or nil
+	end
 	data.Dogs[uid] = dog
 	if not data.Equipped then
 		data.Equipped = uid
@@ -892,7 +939,7 @@ function DataService.AddDog(player, speciesId, name, level)
 	DataService.DogAdded:Fire(player, dog)
 	-- primeiro cachorro (escolha do starter) e raridades altas: grava já, sem esperar o autosave
 	local rarity = Config.RARITY[DogData.Species[speciesId].Rarity]
-	if DataService.DogCount(data) == 1 or rarity.Order >= Config.RARITY.Legendary.Order then
+	if DataService.DogCount(data) == 1 or rarity.Order >= Config.RARITY.Legendary.Order or Variants.IsSpecial(dog) then
 		DataService.SaveNow(player)
 	end
 	return dog

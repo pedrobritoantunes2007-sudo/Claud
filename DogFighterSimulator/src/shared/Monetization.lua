@@ -331,6 +331,76 @@ Monetization.Items = {
 		Recompensa = { Especie = "sun_dragon" },
 	},
 
+	---------------------------------------------------------------- 🎟️ PASSE DE TEMPORADA (2026-10-25)
+	-- (pedido do dono: "Sugiro 199 Robux por temporada") libera a trilha PREMIUM da temporada atual (Shared/SeasonPass):
+	-- comprar de novo na mesma temporada não acontece (a loja mostra OWNED); na próxima temporada compra de novo.
+	{
+		Key = "SeasonPass",
+		Type = "Product",
+		Id = 0, -- ← o PUBLICAR.bat cria e preenche sozinho
+		Preco = 199,
+		Emoji = "🎟️",
+		Icon = "ticket",
+		Tab = "passes",
+		Featured = true,
+		Tag = "NEW",
+		Nome = "SEASON PASS",
+		Descricao = "Unlock the PREMIUM track of this season: way more rewards, 2 season accessories and the EXCLUSIVE season dog at level 30!",
+		Recompensa = { Temporada = true },
+	},
+
+	---------------------------------------------------------------- 🎩 ACESSÓRIOS ESPECIAIS (2026-10-25, Shared/Accessories)
+	-- (pedido do dono: "Dá para comprar com Cash e alguns especiais com Robux") — 1 vez cada (a loja mostra OWNED)
+	{
+		Key = "Acc_crown",
+		Type = "Product",
+		Id = 0, -- ← o PUBLICAR.bat cria e preenche sozinho
+		Preco = 99,
+		Emoji = "👑",
+		Icon = "crown",
+		Tab = "style",
+		Tag = "NEW",
+		Nome = "Royal Crown",
+		Descricao = "A golden crown with jewels for your dog: +10% Cash forever! Everyone sees it.",
+		Recompensa = { Acessorio = "crown" },
+	},
+	{
+		Key = "Acc_galaxy",
+		Type = "Product",
+		Id = 0, -- ← o PUBLICAR.bat cria e preenche sozinho
+		Preco = 129,
+		Emoji = "🌌",
+		Icon = "wing",
+		Tab = "style",
+		Nome = "Galaxy Cape",
+		Descricao = "A starry galaxy cape for your dog: +8% speed forever! Everyone sees it.",
+		Recompensa = { Acessorio = "galaxy" },
+	},
+	{
+		Key = "Acc_diamond",
+		Type = "Product",
+		Id = 0, -- ← o PUBLICAR.bat cria e preenche sozinho
+		Preco = 79,
+		Emoji = "💎",
+		Icon = "gem",
+		Tab = "style",
+		Nome = "Diamond Collar",
+		Descricao = "A sparkling diamond collar for your dog: +8% catch chance forever! Everyone sees it.",
+		Recompensa = { Acessorio = "diamond" },
+	},
+	{
+		Key = "Acc_visor",
+		Type = "Product",
+		Id = 0, -- ← o PUBLICAR.bat cria e preenche sozinho
+		Preco = 69,
+		Emoji = "⭐",
+		Icon = "star",
+		Tab = "style",
+		Nome = "Star Visor",
+		Descricao = "A glowing star visor for your dog: +10% XP forever! Everyone sees it.",
+		Recompensa = { Acessorio = "visor" },
+	},
+
 	---------------------------------------------------------------- ⏱️ TURBINADAS (30 min, somam)
 	{
 		Key = "CashRush",
@@ -390,6 +460,11 @@ Monetization.IDS = {
 	LuckRush = 0 --[[ID]],
 	LeashDivine3 = 0 --[[ID]],
 	LeashGolden10 = 0 --[[ID]],
+	SeasonPass = 0 --[[ID]],
+	Acc_crown = 0 --[[ID]],
+	Acc_galaxy = 0 --[[ID]],
+	Acc_diamond = 0 --[[ID]],
+	Acc_visor = 0 --[[ID]],
 }
 for _, item in ipairs(Monetization.Items) do
 	local id = Monetization.IDS[item.Key]

@@ -16,6 +16,8 @@ local UserInputService = game:GetService("UserInputService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local DogBuilder = require(ReplicatedStorage.Shared.DogBuilder)
 local DogData = require(ReplicatedStorage.Shared.DogData)
+local Variants = require(ReplicatedStorage.Shared.Variants)
+local Accessories = require(ReplicatedStorage.Shared.Accessories)
 local Animator = require(script.Parent.Parent.Animator)
 local Icons = require(script.Parent.Icons)
 
@@ -1382,7 +1384,9 @@ function Kit.DogViewport(parent, props)
 	vp.CurrentCamera = camera
 	local view = { Frame = vp, Model = nil, Angle = 0.6, Spin = true, Walk = false, Zoom = 1 }
 
-	function view.SetSpecies(speciesId, scale)
+	-- variant (opcional) = o cachorro do perfil (✨ shiny / 🥇 Gold / 🌈 Rainbow: Shared/Variants) · acc = acessórios
+	-- equipados { [slot] = id } (Shared/Accessories)
+	function view.SetSpecies(speciesId, scale, variant, acc)
 		if view.Model then
 			Animator.Untrack(view.Model)
 			view.Model:Destroy()
@@ -1392,6 +1396,12 @@ function Kit.DogViewport(parent, props)
 			return
 		end
 		local model = DogBuilder.Build(speciesId, { scale = scale })
+		if variant then
+			Variants.Paint(model, variant)
+		end
+		if acc then
+			Accessories.Attach(model, acc)
+		end
 		model.PrimaryPart.Anchored = true
 		model:PivotTo(CFrame.new())
 		model.Parent = world
@@ -1441,7 +1451,8 @@ end
 
 -- Retrato parado do cachorro (cartões de lista): monta o modelo uma vez, sem animação nem loop
 -- por quadro, então dá para ter dezenas na tela. Retorna o ViewportFrame.
-function Kit.DogPortrait(parent, props, speciesId)
+-- variant (opcional) = o cachorro do perfil: ✨ shiny / 🥇 Gold / 🌈 Rainbow aparecem pintados (Shared/Variants)
+function Kit.DogPortrait(parent, props, speciesId, variant)
 	local vp = make("ViewportFrame", {
 		BackgroundTransparency = 1,
 		Ambient = Kit.FLAT_AMBIENT,
@@ -1454,6 +1465,9 @@ function Kit.DogPortrait(parent, props, speciesId)
 	local ok, model = pcall(DogBuilder.Build, speciesId, {})
 	if not ok or not model then
 		return vp
+	end
+	if variant then
+		Variants.Paint(model, variant)
 	end
 	model.PrimaryPart.Anchored = true
 	model:PivotTo(CFrame.new())

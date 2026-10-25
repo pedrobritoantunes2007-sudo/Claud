@@ -23,7 +23,7 @@ Village.B = 310 -- meia largura da elipse (Z local)
 Village.GROUND_Y = 6 -- altura do chão das ruas e praças (local)
 Village.Half = 576 -- metade do quadrado local varrido pelo chão de blocos (múltiplo de 8)
 Village.LIFE_RANGE = 950 -- câmera mais perto que isso do centro: o povo e os cachorros da vila aparecem (cliente)
-Village.OCEAN_R = 2000 -- mar próprio em volta da vila (MapBuilder): o oceano do mapa só vai até 3600 do centro
+Village.OCEAN_R = 2000 -- (antigo: mar próprio em volta da vila; desde 2026-10-25 o mar cobre o mundo todo — Layout.WORLD)
 
 -- "def" no formato das ilhas (IslandKit / ZoneGeo leem CF, Center, Shape)
 Village.Def = {

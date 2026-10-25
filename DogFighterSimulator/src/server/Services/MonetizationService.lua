@@ -32,6 +32,8 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local DogData = require(ReplicatedStorage.Shared.DogData)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Monetization = require(ReplicatedStorage.Shared.Monetization)
+local Accessories = require(ReplicatedStorage.Shared.Accessories)
+local WeekendEvents = require(ReplicatedStorage.Shared.WeekendEvents)
 local DataService = require(script.Parent.DataService)
 
 local MonetizationService = {}
@@ -243,6 +245,14 @@ local function tickBoosts(player, data)
 end
 
 ---------------------------------------------------------------- multiplicadores (usados pelos outros serviços)
+-- (2026-10-25) também entram aqui os bônus que NÃO são de Robux, para valer em todo lugar que já usa estes números:
+-- 🎩 acessórios (Shared/Accessories: Cash, XP, velocidade) e 🎉 o fim de semana 2x CASH (Shared/WeekendEvents)
+local function accBonus(player)
+	local data = DataService.Get(player)
+	return Accessories.Bonus(data and type(data.Acc) == "table" and data.Acc.On or nil)
+end
+MonetizationService.AccBonus = accBonus
+
 function MonetizationService.CashMult(player)
 	local mult = MonetizationService.Owns(player, "Cash2x") and Monetization.CASH_MULT or 1
 	if MonetizationService.IsVIP(player) then
@@ -251,12 +261,16 @@ function MonetizationService.CashMult(player)
 	if Monetization.BoostLeft(player, "Cash") > 0 then
 		mult *= 2
 	end
-	return mult
+	if WeekendEvents.IsActive("Cash2x") then
+		mult *= WeekendEvents.CASH_MULT
+	end
+	return mult * (1 + accBonus(player).Cash)
 end
 
--- 💨 Speedy Paws
+-- 💨 Speedy Paws (+ 🎩 acessórios de velocidade)
 function MonetizationService.SpeedMult(player)
-	return MonetizationService.Owns(player, "SpeedBoost") and Monetization.SPEED_PASS or 1
+	local mult = MonetizationService.Owns(player, "SpeedBoost") and Monetization.SPEED_PASS or 1
+	return mult * (1 + accBonus(player).Speed)
 end
 
 -- 💖 Quick Revive (fração do tempo do desmaio)
@@ -278,7 +292,7 @@ function MonetizationService.XPMult(player)
 	if MonetizationService.IsVIP(player) then
 		mult *= Monetization.VIP_BONUS
 	end
-	return mult
+	return mult * (1 + accBonus(player).XP) -- (🎩 acessórios de XP)
 end
 
 -- Velocidade do ovo: 1 = normal; Ovos Rápidos = 180/120 = 1.5 (intervalo = EGG_INTERVAL / isto)
@@ -436,6 +450,30 @@ local function grantProduct(player, data, item)
 			table.insert(p.Pending.Eggs, eggId)
 		else
 			data.Spins = (tonumber(data.Spins) or 0) + Monetization.SPINS_PER_EGG -- (sem ovos: vira giros)
+		end
+	end
+	-- 🎟️ Passe de Temporada (trilha premium da temporada atual) · 🎩 acessório especial
+	-- (já tinha: não fica sem nada — vira Cash de 10 missões da melhor ilha)
+	local function already()
+		p.Pending.Cash += Monetization.CashFor({ Recompensa = { Missoes = 10, Cash = 5000 } }, data)
+		remotes.Notify:FireClient(player, "You already had " .. item.Nome .. ", so we turned it into Cash! 💵", "gold")
+	end
+	if reward.Temporada then
+		local ok, Season = pcall(require, script.Parent.SeasonPassService)
+		if not (ok and Season.GrantPremium) then
+			error("SeasonPassService indisponível")
+		end
+		if not Season.GrantPremium(player, data) then
+			already()
+		end
+	end
+	if reward.Acessorio then
+		local ok, Acc = pcall(require, script.Parent.AccessoryService)
+		if not (ok and Acc.Give) then
+			error("AccessoryService indisponível")
+		end
+		if not Acc.Give(player, reward.Acessorio, data) then
+			already()
 		end
 	end
 	return true

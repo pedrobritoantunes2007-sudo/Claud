@@ -9,6 +9,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local DogData = require(ReplicatedStorage.Shared.DogData)
 local Islands = require(ReplicatedStorage.Shared.Islands)
+local Config = require(ReplicatedStorage.Shared.Config)
+local Variants = require(ReplicatedStorage.Shared.Variants)
+local WeekendEvents = require(ReplicatedStorage.Shared.WeekendEvents)
 local Fighters = require(script.Parent.Fighters)
 local ZoneGeo = require(script.Parent.ZoneGeo)
 
@@ -94,35 +97,111 @@ local function dress(f, def)
 	end
 end
 
-local function spawnWild(id)
+-- 📣 aviso para o servidor inteiro (remote Notify)
+local notify
+local function tellAll(text, color, onlyIsland)
+	notify = notify or ReplicatedStorage:FindFirstChild("Remotes") and ReplicatedStorage.Remotes:FindFirstChild("Notify")
+	if not notify then
+		return
+	end
+	for _, p in ipairs(Players:GetPlayers()) do
+		if not onlyIsland or p:GetAttribute("Island") == onlyIsland then
+			notify:FireClient(p, text, color)
+		end
+	end
+end
+
+-- ✨ (2026-10-25, pedido do dono: "1 em cada 500 selvagens nasce brilhando, com aviso para o servidor inteiro") —
+-- na 🌧️ chuva de cachorros raros (evento de fim de semana) o shiny fica WeekendEvents.RAIN_SHINY_MULT vezes mais comum
+local function rollShiny()
+	local chance = Variants.SHINY_CHANCE
+	if WeekendEvents.IsActive("RareRain") then
+		chance *= WeekendEvents.RAIN_SHINY_MULT
+	end
+	return rng:NextNumber() < chance
+end
+
+-- opts (opcional): { Species, Level, Pos, Rain = true } (🌧️ chuva de cachorros raros)
+local function spawnWild(id, opts)
 	local state = active[id]
 	local def = Islands.List[id]
 	if not state or not def then
 		return
 	end
+	opts = opts or {}
 	local list = pool(def)
 	if #list == 0 then
 		return
 	end
-	local pos = spawnPoint(id)
+	local pos = opts.Pos or spawnPoint(id)
 	if not pos then
 		return
 	end
-	local speciesId = list[rng:NextInteger(1, #list)]
+	local speciesId = opts.Species or list[rng:NextInteger(1, #list)]
 	local name = DogData.Species[speciesId].Name
+	local shiny = rollShiny()
+	local prefix = def.Golden and "☀️ Sun Guardian " or (opts.Rain and "🌟 Rare " or "Wild ")
 	local f = Fighters.Spawn({
 		SpeciesId = speciesId,
-		Level = rng:NextInteger(def.Levels[1], def.Levels[2]),
+		Level = opts.Level or rng:NextInteger(def.Levels[1], def.Levels[2]),
 		Kind = "npc",
-		DisplayName = (def.Golden and "☀️ Sun Guardian " or "Wild ") .. name,
+		DisplayName = (shiny and "✨ Shiny " or "") .. prefix .. name,
 		CFrame = CFrame.new(pos) * CFrame.Angles(0, rng:NextNumber(0, 6.28), 0),
 		Zone = "arena",
 		Island = id,
 		StatMult = def.Golden and { HP = 1.1, Atk = 1 } or { HP = DEFAULT_MULT, Atk = DEFAULT_MULT },
+		Variant = shiny and { Shiny = true } or nil,
 	})
-	f.Def = { Island = id }
+	f.Def = { Island = id, Rain = opts.Rain or nil }
 	dress(f, def)
 	state.List[f] = true
+	if opts.Rain then
+		state.Rain = (state.Rain or 0) + 1
+	end
+	if shiny then
+		tellAll("✨ A SHINY " .. name .. " appeared on " .. Islands.EMOJI[id] .. " " .. def.Name .. "! Catch it before someone else does!", "gold")
+	end
+	return f
+end
+
+---------------------------------------------------------------- 🌧️ chuva de cachorros raros (evento de fim de semana)
+-- (2026-10-25, pedido do dono: "revezando entre 2x captura, 2x Cash e chuva de cachorros raros") de tempos em tempos
+-- um cachorro de 1-2 raridades ACIMA da ilha cai do céu num lugar livre (level um pouco acima do máximo da ilha).
+local RAIN_RARITIES = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic" }
+local function rainSpecies(def)
+	local order = table.find(RAIN_RARITIES, def.Rarity) or 1
+	local target = RAIN_RARITIES[math.min(#RAIN_RARITIES, order + rng:NextInteger(1, 2))]
+	local list = {}
+	for _, sid in ipairs(DogData.SpeciesOfRarity(target)) do
+		if not DogData.Species[sid].BossOnly then
+			table.insert(list, sid)
+		end
+	end
+	return #list > 0 and list[rng:NextInteger(1, #list)] or nil
+end
+
+local function rain(id)
+	local state = active[id]
+	local def = Islands.List[id]
+	if not (state and def) or def.Flyers or def.Golden or (state.Rain or 0) >= WeekendEvents.RAIN_MAX then
+		return
+	end
+	local speciesId = rainSpecies(def)
+	local ground = spawnPoint(id)
+	if not (speciesId and ground) then
+		return
+	end
+	local f = spawnWild(id, {
+		Species = speciesId,
+		Level = math.min(Config.MAX_LEVEL, def.Levels[2] + rng:NextInteger(1, 4)),
+		Pos = ground + Vector3.new(0, 70, 0), -- cai do céu
+		Rain = true,
+	})
+	if f then
+		Fighters.Fx("Teleport", { Position = ground })
+		local rarity = Config.RARITY[DogData.Species[speciesId].Rarity]
+		tellAll("🌟 RARE DOG RAIN! A " .. rarity.Label .. " " .. DogData.Species[speciesId].Name .. " fell from the sky!", "gold", id)
+	end
 end
 
 local function spawnChampion(id)
@@ -217,6 +296,22 @@ function NPCService.Start()
 			end
 		end
 	end)
+	-- 🌧️ chuva de cachorros raros: só no evento de fim de semana, nas ilhas com gente
+	task.spawn(function()
+		while true do
+			task.wait(WeekendEvents.RAIN_EVERY)
+			if WeekendEvents.IsActive("RareRain") then
+				for id in pairs(active) do
+					if islandHasPlayers(id) then
+						local ok, err = pcall(rain, id)
+						if not ok then
+							warn("[NPCService] chuva falhou em", id, err)
+						end
+					end
+				end
+			end
+		end
+	end)
 	Fighters.Killed.Event:Connect(function(victim)
 		if victim.Kind ~= "npc" or not victim.Def then
 			return
@@ -225,6 +320,16 @@ function NPCService.Start()
 		local state = id and active[id]
 		if state then
 			state.List[victim] = nil
+		end
+		-- (cachorro da chuva não renasce: a chuva manda outro)
+		if victim.Def.Rain then
+			if state then
+				state.Rain = math.max(0, (state.Rain or 1) - 1)
+			end
+			task.delay(1.2, function()
+				Fighters.Remove(victim)
+			end)
+			return
 		end
 		-- o derrotado some logo (não fica deitado no chão)
 		task.delay(1.2, function()
@@ -257,6 +362,12 @@ function NPCService.Captured(victim)
 		end
 	end
 	pcall(Fighters.Remove, victim)
+	if victim.Def and victim.Def.Rain then
+		if state then
+			state.Rain = math.max(0, (state.Rain or 1) - 1)
+		end
+		return -- (cachorro da chuva não renasce)
+	end
 	local champion = victim.Def and victim.Def.Champion
 	task.delay(champion and CHAMPION_RESPAWN or RESPAWN, function()
 		if not (id and active[id]) then

@@ -1,6 +1,7 @@
 -- Economia e regras gerais do Dog Fighter Simulator.
 -- Uma moeda só (Cash). Comida = XP direto no cachorro equipado.
 local Config = {}
+local Variants = require(script.Parent.Variants)
 
 -- 🔄 RECOMEÇO (2026-10-25, pedido do dono: "quero reiniciar o de todos" → "zerar progresso de todos"): com a captura
 -- "tipo pokémon" todo mundo começa do ZERO num save novo. O save antigo continua guardado em OLD_DATASTORE_NAME (para
@@ -65,13 +66,14 @@ Config.CATCH = {
 	Max = 0.95,
 }
 -- chance de captura (0..1). hpPct = vida que sobrou (0..1); levelGap = level do selvagem − level do seu cachorro;
--- luck = pontos de sorte (Lucky Paw / Lucky Rush: Monetization.LuckOf)
-function Config.CatchChance(rarity, hpPct, leashMult, levelGap, luck, champion)
+-- luck = pontos de sorte (Lucky Paw / Lucky Rush: Monetization.LuckOf); extra = multiplicador a mais (🎉 fim de
+-- semana 2x CATCH × 🎩 acessórios de captura — CatchService.ChanceMult)
+function Config.CatchChance(rarity, hpPct, leashMult, levelGap, luck, champion, extra)
 	local base = Config.CATCH.Base[rarity] or 0.05
 	local hp = 0.35 + 1.65 * (1 - math.clamp(hpPct or 1, 0, 1))
 	local lvl = math.clamp(1 - math.max(0, levelGap or 0) * 0.03, 0.4, 1)
 	local lucky = 1 + (luck or 0) * 0.0375
-	local c = base * hp * (leashMult or 1) * lvl * lucky * (champion and Config.CATCH.Champion or 1)
+	local c = base * hp * (leashMult or 1) * lvl * lucky * (champion and Config.CATCH.Champion or 1) * (extra or 1)
 	return math.clamp(c, Config.CATCH.Min, Config.CATCH.Max)
 end
 
@@ -115,6 +117,38 @@ Config.VILLAGE_PEOPLE = {
 	Professor = "",
 	Guide = "",
 }
+
+---------------------------------------------------------------- 🐺 CLÃS (matilhas)
+-- (2026-10-25, pedido do dono: "criar um clã por 5.000 Cash, com até 20 membros, convidar, entrar e sair. A sigla do
+-- clã aparece em cima da cabeça e o ranking semanal dos clãs fica na Ilha do Ranking.") Servidor: Services/ClanService
+-- (os clãs ficam num DataStore próprio e valem em todos os servidores) · tela: Systems/ClanMenu.
+--   Cost = preço para criar · Max = membros · Tag = letras da sigla (min, max) · Name = letras do nome (min, max)
+--   InviteTime = s para aceitar um convite · Points = pontos da semana: cada vitória e cada captura de um membro
+--   Colors = cores da sigla (quem cria escolhe)
+Config.CLAN = {
+	Cost = 5000,
+	Max = 20,
+	Tag = { 2, 4 },
+	Name = { 3, 18 },
+	InviteTime = 120,
+	Points = { Win = 1, Catch = 3, Quest = 5 },
+	Colors = {
+		Color3.fromRGB(255, 220, 120),
+		Color3.fromRGB(255, 110, 110),
+		Color3.fromRGB(110, 200, 255),
+		Color3.fromRGB(130, 235, 130),
+		Color3.fromRGB(210, 140, 255),
+		Color3.fromRGB(255, 160, 70),
+		Color3.fromRGB(255, 140, 210),
+		Color3.fromRGB(240, 240, 250),
+	},
+}
+Config.CLAN_STORE = "DogClans_v1" -- os clãs (registro de cada um)
+Config.CLAN_NAMES = "DogClanNames_v1" -- nome → clã (2 clãs não têm o mesmo nome)
+Config.BOARD_CLANS = "ClanWeek_v1_" -- placar semanal dos clãs (+ nº da semana)
+Config.BOARD_CATCHES = "TopCatches_v1" -- 🦮 mais capturas (de sempre)
+Config.BOARD_DEX = "TopDex_v1" -- 📖 Dex mais completo
+Config.BOARD_SEASON = "SeasonStars_v1_" -- 🎟️ estrelas do passe (+ nº da temporada)
 
 ---------------------------------------------------------------- Casinha + tigelas
 -- Cada nível da casa aumenta a renda do time (HOUSE_INCOME_BONUS) e muda o visual. (Bowls = legado, sem uso.)
@@ -449,9 +483,13 @@ function Config.StarText(stars)
 end
 
 ---------------------------------------------------------------- Funções
-function Config.Stats(species, level)
+-- dog (opcional) = o cachorro do perfil: ✨ Shiny / 🥇 Gold / 🌈 Rainbow deixam mais forte (Shared/Variants)
+function Config.Stats(species, level, dog)
 	local rarity = Config.RARITY[species.Rarity]
 	local growth = (1 + Config.LEVEL_GROWTH * (level - 1)) * (1 + Config.STAR_BONUS * Config.StarsFor(level))
+	if dog then
+		growth *= Variants.Mult(dog)
+	end
 	local s = species.Stats
 	local hp = math.floor(Config.BASE_HP * rarity.Stat * s.HP * growth)
 	local atk = math.floor(Config.BASE_ATK * rarity.Stat * s.Atk * growth)

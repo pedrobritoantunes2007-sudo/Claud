@@ -4,6 +4,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Islands = require(ReplicatedStorage.Shared.Islands)
 local Village = require(ReplicatedStorage.Shared.Village)
+local RankIsland = require(ReplicatedStorage.Shared.RankIsland)
 local TerrainGen = require(script.Parent.TerrainGen)
 local IslandKit = require(script.Parent.IslandKit)
 local AntiPisca = require(script.Parent.AntiPisca)
@@ -57,6 +58,15 @@ function WorldBuilder.Build(parent)
 		local ok, err = pcall(buildOne, Village.Id, require(village), Village.Def, 3, parent)
 		if not ok then
 			warn("[World] Pawville falhou: " .. tostring(err))
+		end
+		task.wait()
+	end
+	-- 🏆 Ilha do Ranking (2026-10-25): pequena, logo depois da vila (os placares do LeaderboardService ficam nela)
+	local rank = script.Parent:FindFirstChild("RankIsland")
+	if rank then
+		local ok, err = pcall(buildOne, RankIsland.Id, require(rank), RankIsland.Def, 5, parent)
+		if not ok then
+			warn("[World] Ilha do Ranking falhou: " .. tostring(err))
 		end
 		task.wait()
 	end

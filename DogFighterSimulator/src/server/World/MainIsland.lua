@@ -12,6 +12,7 @@ local CollectionService = game:GetService("CollectionService")
 
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Islands = require(ReplicatedStorage.Shared.Islands)
+local RankIsland = require(ReplicatedStorage.Shared.RankIsland)
 local BlockStyle = require(ReplicatedStorage.Shared.BlockStyle)
 local Deco = require(script.Parent.Deco)
 
@@ -774,6 +775,35 @@ local function pawvillePortal(parent)
 	return model
 end
 
+---------------------------------------------------------------- 🏆 portal da Ilha do Ranking
+-- (2026-10-25, pedido do dono: "uma ilha separada, com portal na Pawville e na ilha principal") um portal a mais na
+-- Praça dos Portais, igual aos das ilhas, dourado, no vão entre a chegada do spawn e a Frosty Peaks.
+function MainIsland.RankPortalCFrame()
+	local a = math.rad(RankIsland.PLAZA_ANGLE)
+	local pos = Vector3.new(math.cos(a), 0, math.sin(a)) * Layout.PORTAL_RING
+	return CFrame.new(pos + Vector3.new(0, G, 0)) * CFrame.Angles(0, math.atan2(math.cos(a), math.sin(a)), 0)
+end
+local function rankPortal(parent)
+	local cf = MainIsland.RankPortalCFrame()
+	local col = RankIsland.Color
+	local model, swirl = Deco.Portal(parent, cf, col, col:Lerp(DARK, 0.25), "Portal_" .. RankIsland.Id)
+	swirl:SetAttribute("PortalTo", RankIsland.Id)
+	swirl:SetAttribute("PortalFrom", "main")
+	CollectionService:AddTag(swirl, "IslandPortal")
+	local b = Deco.Builder(model, cf, 1)
+	local sign = b:Box(Vector3.new(46, 13, 1.2), C(40, 48, 62), 0, 63, 0)
+	sign.Name = "PortalSign"
+	for _, face in ipairs({ Enum.NormalId.Front, Enum.NormalId.Back }) do
+		twoLineSign(sign, face, RankIsland.Emoji .. " " .. RankIsland.Name, "Top players · Clans · Season Pass", col:Lerp(Color3.new(1, 1, 1), 0.35))
+	end
+	b:Box(Vector3.new(47.6, 1.4, 2), GOLD, 0, 70.2, 0, 0, 0, 0, DECOR)
+	b:Box(Vector3.new(47.6, 1.4, 2), GOLD4[1], 0, 55.8, 0, 0, 0, 0, DECOR)
+	for _, side in ipairs({ -1, 1 }) do
+		obelisk(b, side * 41, -15, col)
+	end
+	return model
+end
+
 ---------------------------------------------------------------- Gêiser do Céu
 local GEY = Islands.GEYSER
 local GEY_R = 58
@@ -989,6 +1019,7 @@ function MainIsland.Build(map)
 	task.wait()
 	portalPlaza(folder)
 	pawvillePortal(folder)
+	rankPortal(folder)
 	task.wait()
 	geyser(folder)
 	folder.Parent = map

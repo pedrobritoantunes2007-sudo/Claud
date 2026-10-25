@@ -1,6 +1,13 @@
--- 🏆 Rankings globais (todos os servidores), mostrados em 2 placares ao lado da praça de spawn:
---   💪 Strongest Players  — força (Power) do cachorro mais forte de cada jogador (recorde de sempre)
---   🏆 Most Wins This Week — vitórias na Arena (NPC ou PvP) na semana; zera toda segunda 00:00 UTC
+-- 🏆 Rankings globais (todos os servidores). (2026-10-25, pedido do dono: "Ilha do Ranking: uma ilha separada, com
+-- portal na Pawville e na ilha principal. Os placares ficam só lá: mais fortes, vitórias da semana, mais capturas, Dex
+-- mais completo, melhores clãs e nível do Passe de Temporada.") Os 6 placares ficam na Praça dos Campeões da
+-- 🏆 Ilha do Ranking (Shared/RankIsland: lugar de cada um), não mais na praça de spawn:
+--   💪 Strongest Players   — força (Power) do cachorro mais forte de cada jogador (recorde de sempre)
+--   🏆 Most Wins This Week — vitórias (selvagens, campeões ou PvP) na semana; zera toda segunda 00:00 UTC
+--   🦮 Most Catches        — cachorros capturados (de sempre)
+--   📖 Best Dex            — espécies descobertas
+--   🐺 Best Clans (week)   — pontos da semana dos clãs (Services/ClanService)
+--   🎟️ Season Pass         — estrelas do Passe de Temporada da temporada atual (Shared/SeasonPass)
 -- Usa OrderedDataStores. Tudo protegido com pcall: sem DataStore (Studio sem API) os placares só ficam vazios.
 local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
@@ -8,7 +15,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local DogData = require(ReplicatedStorage.Shared.DogData)
-local Layout = require(ReplicatedStorage.Shared.Layout)
+local DexRewards = require(ReplicatedStorage.Shared.DexRewards)
+local RankIsland = require(ReplicatedStorage.Shared.RankIsland)
+local SeasonPass = require(ReplicatedStorage.Shared.SeasonPass)
 local DataService = require(script.Parent.DataService)
 local Fighters = require(script.Parent.Fighters)
 
@@ -27,28 +36,38 @@ local function weekEndsAt()
 	return MONDAY_EPOCH + (weekIndex() + 1) * WEEK
 end
 
-local powerStore, winsStore, winsWeek
-local function stores()
-	if not powerStore then
-		local ok, store = pcall(DataStoreService.GetOrderedDataStore, DataStoreService, Config.BOARD_POWER)
-		powerStore = ok and store or false
-	end
-	local week = weekIndex()
-	if winsWeek ~= week then
-		local ok, store = pcall(DataStoreService.GetOrderedDataStore, DataStoreService, Config.BOARD_WINS .. week)
-		winsStore = ok and store or false
-		winsWeek = week
-	end
-	return powerStore, winsStore
+local function lazy(name)
+	local ok, m = pcall(require, script.Parent[name])
+	return ok and m or nil
 end
 
--- força do cachorro mais forte do jogador
+-- OrderedDataStore com cache por nome (false = indisponível)
+local storeCache = {}
+local function ordered(name)
+	if storeCache[name] == nil then
+		local ok, store = pcall(DataStoreService.GetOrderedDataStore, DataStoreService, name)
+		storeCache[name] = ok and store or false
+	end
+	return storeCache[name]
+end
+
+local function stores()
+	return {
+		Power = ordered(Config.BOARD_POWER),
+		Wins = ordered(Config.BOARD_WINS .. weekIndex()),
+		Catches = ordered(Config.BOARD_CATCHES),
+		Dex = ordered(Config.BOARD_DEX),
+		Season = ordered(Config.BOARD_SEASON .. (SeasonPass.Current())),
+	}
+end
+
+-- força do cachorro mais forte do jogador (✨🥇🌈 contam: Shared/Variants)
 local function bestPower(data)
 	local best = 0
 	for _, dog in pairs(data.Dogs or {}) do
 		local species = DogData.Species[dog.Species]
 		if species then
-			local ok, stats = pcall(Config.Stats, species, dog.Level)
+			local ok, stats = pcall(Config.Stats, species, dog.Level, dog)
 			if ok and stats and stats.Power > best then
 				best = stats.Power
 			end
@@ -67,34 +86,70 @@ local function weekWins(data)
 	return data.WeekWins
 end
 
-local dirty = {} -- [player] = true quando mudou desde a última escrita
-local sentPower = {} -- [player] = último Power enviado
+-- estrelas do passe nesta temporada
+local function seasonStars(data)
+	local s = data.Season
+	if type(s) == "table" and s.Id == SeasonPass.Current() then
+		return math.floor(tonumber(s.Stars) or 0)
+	end
+	return 0
+end
+
+-- o valor de cada placar para este perfil
+local VALUE = {
+	Catches = function(data)
+		return math.floor(tonumber(data.Catches) or 0)
+	end,
+	Dex = function(data)
+		return DexRewards.Count(data.Discovered)
+	end,
+	Season = seasonStars,
+}
+
+local dirty = {} -- [player] = true quando as vitórias mudaram desde a última escrita
+local sent = {} -- [player] = { [placar] = último valor enviado }
 
 local function push(player)
 	local data = DataService.Get(player)
 	if not (data and data.Started) then
 		return
 	end
-	local pStore, wStore = stores()
+	local st = stores()
 	local key = tostring(player.UserId)
+	local mine = sent[player] or {}
+	sent[player] = mine
 	local power = bestPower(data)
-	if pStore and power > (sentPower[player] or 0) then
+	if st.Power and power > (mine.Power or 0) then
 		local ok = pcall(function()
-			pStore:UpdateAsync(key, function(old)
+			st.Power:UpdateAsync(key, function(old)
 				return math.max(tonumber(old) or 0, power)
 			end)
 		end)
 		if ok then
-			sentPower[player] = power
+			mine.Power = power
 		end
 	end
-	if wStore and dirty[player] then
+	if st.Wins and dirty[player] then
 		local wins = weekWins(data).Wins
 		local ok = pcall(function()
-			wStore:SetAsync(key, wins)
+			st.Wins:SetAsync(key, wins)
 		end)
 		if ok then
 			dirty[player] = nil
+		end
+	end
+	for board, fn in pairs(VALUE) do
+		local store = st[board]
+		local v = fn(data)
+		-- (a temporada nova começa do zero: guarda a chave junto)
+		local tag = board == "Season" and (SeasonPass.Current() .. ":" .. v) or v
+		if store and v > 0 and mine[board] ~= tag then
+			local ok = pcall(function()
+				store:SetAsync(key, v)
+			end)
+			if ok then
+				mine[board] = tag
+			end
 		end
 	end
 end
@@ -115,37 +170,36 @@ local function nameOf(userId)
 	return names[userId]
 end
 
-local function groundY(x, z)
-	local params = RaycastParams.new()
-	params.FilterType = Enum.RaycastFilterType.Include
-	params.FilterDescendantsInstances = { workspace.Terrain }
-	local hit = workspace:Raycast(Vector3.new(x, 200, z), Vector3.new(0, -400, 0), params)
-	return hit and hit.Position.Y or 0
-end
-
-local function makeBoard(name, title, color, offset)
-	local center = Layout.SPAWN_PLAZA
-	local pos = center + offset
-	local y = groundY(pos.X, pos.Z)
+-- placar em pé na posição `pos` (mundo), virado para `lookAt` (cada placar da Ilha do Ranking olha para o pódio)
+local function makeBoard(name, title, color, pos, lookAt, parent)
 	local model = Instance.new("Model")
 	model.Name = name
-	local look = CFrame.lookAt(Vector3.new(pos.X, y, pos.Z), Vector3.new(center.X, y, center.Z))
+	local look = CFrame.lookAt(pos, Vector3.new(lookAt.X, pos.Y, lookAt.Z))
 	local board = Instance.new("Part")
 	board.Name = "Placa"
 	board.Anchored = true
-	board.Size = Vector3.new(16, 12, 0.8)
-	board.CFrame = look * CFrame.new(0, 9, 0)
+	board.Size = Vector3.new(20, 15, 0.8)
+	board.CFrame = look * CFrame.new(0, 11.5, 0)
 	board.Color = Color3.fromRGB(40, 32, 58)
 	board.Material = Enum.Material.SmoothPlastic
 	board.Parent = model
+	-- moldura e pés na cor do placar
+	local function piece(size, cf, c)
+		local p = Instance.new("Part")
+		p.Anchored = true
+		p.Size = size
+		p.CFrame = cf
+		p.Color = c
+		p.Material = Enum.Material.SmoothPlastic
+		p.CastShadow = false
+		p.Parent = model
+		return p
+	end
+	piece(Vector3.new(21.2, 1, 1.2), look * CFrame.new(0, 19.4, 0), color)
+	piece(Vector3.new(21.2, 1, 1.2), look * CFrame.new(0, 3.6, 0), color:Lerp(Color3.new(0, 0, 0), 0.25))
 	for _, side in ipairs({ -1, 1 }) do
-		local post = Instance.new("Part")
-		post.Anchored = true
-		post.Size = Vector3.new(0.8, 9, 0.8)
-		post.CFrame = look * CFrame.new(side * 7, 4.5, 0.6)
-		post.Color = color
-		post.Material = Enum.Material.SmoothPlastic
-		post.Parent = model
+		piece(Vector3.new(1, 19.8, 1), look * CFrame.new(side * 10.1, 9.9, 0.6), color)
+		piece(Vector3.new(2.2, 1.2, 2.2), look * CFrame.new(side * 10.1, 0.6, 0.6), Color3.fromRGB(150, 140, 130))
 	end
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front
@@ -198,31 +252,60 @@ local function makeBoard(name, title, color, offset)
 		Text = "",
 		TextColor3 = Color3.fromRGB(200, 195, 220),
 	})
-	model.Parent = workspace
+	model.Parent = parent
 	return { Rows = rows, Footer = footer }
 end
 
-local function fill(boardUi, store, format)
-	if not store then
-		boardUi.Footer.Text = "Loading..."
-		return
-	end
-	local ok, page = pcall(function()
-		return store:GetSortedAsync(false, TOP):GetCurrentPage()
-	end)
-	if not ok then
-		return
-	end
+-- preenche as linhas: entries = { { Name, Value } }
+local function show(boardUi, entries, format)
 	for i, row in ipairs(boardUi.Rows) do
-		local entry = page[i]
-		if entry then
-			row.Name.Text = nameOf(tonumber(entry.key) or 0)
-			row.Value.Text = format(entry.value)
+		local e = entries and entries[i]
+		if e then
+			row.Name.Text = e.Name
+			row.Value.Text = format(e.Value)
 		else
 			row.Name.Text = "-"
 			row.Value.Text = ""
 		end
 	end
+end
+
+-- top 10 de um OrderedDataStore de jogadores (chave = userId)
+local function topPlayers(store)
+	if not store then
+		return nil
+	end
+	local ok, page = pcall(function()
+		return store:GetSortedAsync(false, TOP):GetCurrentPage()
+	end)
+	if not ok then
+		return nil
+	end
+	local out = {}
+	for i, entry in ipairs(page) do
+		out[i] = { Name = nameOf(tonumber(entry.key) or 0), Value = entry.value }
+	end
+	return out
+end
+
+-- top 10 dos clãs na semana (chave = id do clã)
+local function topClans()
+	local Clan = lazy("ClanService")
+	if not (Clan and Clan.WeekStore) then
+		return nil
+	end
+	local ok, page = Clan.WeekStore().Top(TOP)
+	if not ok or type(page) ~= "table" then
+		return nil
+	end
+	local out = {}
+	for _, entry in ipairs(page) do
+		local okD, name = pcall(Clan.Describe, entry.key)
+		if okD and name then
+			table.insert(out, { Name = name, Value = entry.value })
+		end
+	end
+	return out
 end
 
 local function countdown()
@@ -235,6 +318,29 @@ local function countdown()
 	end
 	return string.format("Resets in %dh %dm", h, m)
 end
+
+-- o que cada placar mostra
+local BOARDS = {
+	Power = { Title = "💪 STRONGEST PLAYERS", Color = Color3.fromRGB(255, 150, 50), Footer = "Power of your strongest dog", Fmt = function(v)
+		return "💪 " .. Config.Format(v)
+	end },
+	Wins = { Title = "🏆 MOST WINS THIS WEEK", Color = Color3.fromRGB(90, 200, 110), Fmt = function(v)
+		return "🏆 " .. Config.Format(v)
+	end },
+	Catches = { Title = "🦮 MOST CATCHES", Color = Color3.fromRGB(70, 170, 255), Footer = "Wild dogs caught with leashes", Fmt = function(v)
+		return "🦮 " .. Config.Format(v)
+	end },
+	Dex = { Title = "📖 BEST DEX", Color = Color3.fromRGB(180, 110, 255), Footer = "Dog species discovered", Fmt = function(v)
+		return "📖 " .. Config.Format(v)
+	end },
+	Clans = { Title = "🐺 BEST CLANS (WEEK)", Color = Color3.fromRGB(255, 110, 110), Fmt = function(v)
+		return "🐺 " .. Config.Format(v)
+	end },
+	Season = { Title = "🎟️ SEASON PASS", Color = Color3.fromRGB(90, 220, 210), Fmt = function(v)
+		local level = SeasonPass.LevelOf(v)
+		return "Lv." .. level .. " ⭐" .. Config.Format(v)
+	end },
+}
 
 function LeaderboardService.Start()
 	-- vitórias: todo cachorro derrotado por um cachorro de jogador conta (NPC ou PvP)
@@ -256,28 +362,47 @@ function LeaderboardService.Start()
 	Players.PlayerRemoving:Connect(function(player)
 		pcall(push, player)
 		dirty[player] = nil
-		sentPower[player] = nil
+		sent[player] = nil
 	end)
 
 	task.spawn(function()
 		task.wait(8) -- deixa o mapa terminar de montar
-		local powerBoard = makeBoard("RankingPower", "💪 STRONGEST PLAYERS", Color3.fromRGB(255, 150, 50), Vector3.new(-20, 0, 10))
-		local winsBoard = makeBoard("RankingWins", "🏆 MOST WINS THIS WEEK", Color3.fromRGB(90, 200, 110), Vector3.new(20, 0, 10))
-		powerBoard.Footer.Text = "Power of your strongest dog"
+		local folder = Instance.new("Folder")
+		folder.Name = "Placares"
+		folder.Parent = workspace
+		local ui = {}
+		local center = RankIsland.ToWorld(0, RankIsland.GROUND_Y, 0)
+		for _, b in ipairs(RankIsland.BOARDS) do
+			local info = BOARDS[b.Key]
+			local x, z = RankIsland.BoardPos(b)
+			ui[b.Key] = makeBoard("Ranking" .. b.Key, info.Title, info.Color, RankIsland.ToWorld(x, RankIsland.GROUND_Y, z), center, folder)
+			ui[b.Key].Footer.Text = info.Footer or ""
+		end
 		while true do
 			for _, player in ipairs(Players:GetPlayers()) do
 				pcall(push, player)
 			end
-			local pStore, wStore = stores()
-			fill(powerBoard, pStore, function(v)
-				return "💪 " .. Config.Format(v)
-			end)
-			fill(winsBoard, wStore, function(v)
-				return "🏆 " .. Config.Format(v)
-			end)
+			local st = stores()
+			for key, board in pairs(ui) do
+				local entries
+				if key == "Clans" then
+					entries = topClans()
+				else
+					entries = topPlayers(st[key])
+				end
+				if entries then
+					show(board, entries, BOARDS[key].Fmt)
+				elseif not st[key] and key ~= "Clans" then
+					board.Footer.Text = "Loading..."
+				end
+			end
+			local _, seasonLeft = SeasonPass.Current()
 			for _ = 1, REFRESH / 30 do
-				winsBoard.Footer.Text = countdown()
+				ui.Wins.Footer.Text = countdown()
+				ui.Clans.Footer.Text = countdown()
+				ui.Season.Footer.Text = "Season ends in " .. math.floor(seasonLeft / 86400) .. "d " .. math.floor((seasonLeft % 86400) / 3600) .. "h"
 				task.wait(30)
+				seasonLeft = math.max(0, seasonLeft - 30)
 			end
 		end
 	end)

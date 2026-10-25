@@ -15,6 +15,8 @@ local UserInputService = game:GetService("UserInputService")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Monetization = require(ReplicatedStorage.Shared.Monetization)
+local WeekendEvents = require(ReplicatedStorage.Shared.WeekendEvents)
+local Accessories = require(ReplicatedStorage.Shared.Accessories)
 local UI = script.Parent.Parent:WaitForChild("UI")
 local Kit = require(UI:WaitForChild("Kit"))
 local Icons = require(UI:WaitForChild("Icons"))
@@ -154,7 +156,11 @@ local function chanceFor(target, mine, leashId)
 	if Config.TutorialCatch(Net.Profile) then
 		return 1
 	end
-	return Config.CatchChance(target:GetAttribute("Rarity"), hp, leash.Mult, gap, Monetization.LuckOf(player), isChampion(target))
+	-- (igual ao CatchService.ChanceMult: 🎉 fim de semana 2x CATCH × 🎩 acessórios de captura)
+	local extra = WeekendEvents.IsActive("Catch2x") and WeekendEvents.CATCH_MULT or 1
+	local acc = Net.Profile and type(Net.Profile.Acc) == "table" and Net.Profile.Acc.On or nil
+	extra *= 1 + Accessories.Bonus(acc).Catch
+	return Config.CatchChance(target:GetAttribute("Rarity"), hp, leash.Mult, gap, Monetization.LuckOf(player), isChampion(target), extra)
 end
 
 -- coleira escolhida: a selecionada se tiver; senão a primeira que tiver (normal → divina)

@@ -22,6 +22,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Monetization = require(ReplicatedStorage.Shared.Monetization)
 local Islands = require(ReplicatedStorage.Shared.Islands)
 local Village = require(ReplicatedStorage.Shared.Village)
+local RankIsland = require(ReplicatedStorage.Shared.RankIsland)
 local DogData = require(ReplicatedStorage.Shared.DogData)
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
@@ -687,6 +688,10 @@ local MENU = {
 	{ Menu = "Inventario", Label = "EGGS", Icon = "egg", Color = rgb(0xffbf2e) },
 	{ Menu = "Map", Label = "MAP", Icon = "map", Color = rgb(0x22c8ad) },
 	{ Menu = "Boss", Label = "BOSS", Icon = "tower", Color = rgb(0x8f5cf0) },
+	-- (2026-10-25) 🎟️ Passe de Temporada · 🎩 acessórios · 🐺 clãs
+	{ Menu = "Pass", Label = "PASS", Icon = "ticket", Color = rgb(0x3fcfc4) },
+	{ Menu = "Style", Label = "STYLE", Icon = "hat", Color = rgb(0xb07bff) },
+	{ Menu = "Clan", Label = "CLAN", Icon = "flag", Color = rgb(0xff6e6e) },
 	{ Menu = "Loja", Label = "SHOP", Icon = "gift", Color = rgb(0xff6fb0) },
 }
 -- 🏠 2026-10: sem casinha (Config.HOUSES = false) o botão HOME sai — ele só tinha casinha, estande e time
@@ -903,6 +908,10 @@ function HUD.Start()
 			name = string.upper(Village.Name)
 			sub = "Safe zone"
 			color = Village.Color
+		elseif where == RankIsland.Id then
+			name = string.upper(RankIsland.Name)
+			sub = "Safe zone"
+			color = RankIsland.Color
 		else
 			name = "HOME ISLAND"
 			sub = "Safe zone"

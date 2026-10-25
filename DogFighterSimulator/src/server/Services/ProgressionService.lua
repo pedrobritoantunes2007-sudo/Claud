@@ -17,6 +17,7 @@ local Signal = require(ReplicatedStorage.Shared.Signal)
 local Config = require(ReplicatedStorage.Shared.Config)
 local DogData = require(ReplicatedStorage.Shared.DogData)
 local Islands = require(ReplicatedStorage.Shared.Islands)
+local DexRewards = require(ReplicatedStorage.Shared.DexRewards)
 local DataService = require(script.Parent.DataService)
 local EggService = require(script.Parent.EggService)
 local Fighters = require(script.Parent.Fighters)
@@ -25,6 +26,8 @@ local ProgressionService = {}
 
 -- (player, tipo, n) — qualquer progresso contado (para outros sistemas, ex. Season Pass)
 ProgressionService.Tracked = Signal.new()
+-- (player, tipo) — prêmio resgatado: "Daily" | "Quick" | "DailyBonus" | "Login" (🎟️ Passe de Temporada dá estrelas)
+ProgressionService.Claimed = Signal.new()
 
 local remotes
 local stateDirty = {} -- [player] = true: reenviar retrato
@@ -88,9 +91,14 @@ local function rewardXP(player, data, levels)
 	return math.floor(Config.XPToNext(equippedLevel(data)) * levels * xpMult(player))
 end
 
--- Converte { Cash, XPLevels, Egg } em valores concretos para mostrar/entregar
+-- Converte { Cash, XPLevels, Egg, Missions, Leash, Spins, LuckySpins } em valores concretos para mostrar/entregar
+-- (2026-10-25, 📖 Dex com prêmios: Missions = Cash que vale N missões da melhor ilha, Leash = { tipo, n } coleiras,
+-- Spins / LuckySpins = giros da roleta)
 local function resolveReward(player, data, reward)
 	local cash = reward.Cash or 0
+	if reward.Missions then
+		cash += math.floor(cashUnit(data) * 2 * reward.Missions)
+	end
 	local xp = rewardXP(player, data, reward.XPLevels)
 	if xp > 0 and equippedLevel(data) >= Config.MAX_LEVEL then
 		-- cachorro no level máximo: o XP vira Cash
@@ -99,7 +107,16 @@ local function resolveReward(player, data, reward)
 	end
 	-- 🎰 sem ovos (Config.EGGS = false) o prêmio de ovo vira 1 giro da roleta
 	local egg = reward.Egg == true
-	return { Cash = cash, XP = xp, Egg = egg and Config.EGGS, Spin = egg and not Config.EGGS or nil }
+	local leash = type(reward.Leash) == "table" and Config.LEASH[reward.Leash[1]] and { reward.Leash[1], math.floor(tonumber(reward.Leash[2]) or 0) } or nil
+	return {
+		Cash = cash,
+		XP = xp,
+		Egg = egg and Config.EGGS,
+		Spin = egg and not Config.EGGS or nil,
+		Spins = reward.Spins,
+		LuckySpins = reward.LuckySpins,
+		Leash = leash,
+	}
 end
 
 ---------------------------------------------------------------- missões
@@ -537,6 +554,27 @@ table.insert(ACHIEVEMENTS, {
 	Reward = { XPLevels = 3, Egg = true },
 	Title = "Tycoon",
 })
+-- 📖 DEX COM PRÊMIOS (2026-10-25, pedido do dono: "completar uma raridade ou chegar a 10, 25 ou 50 cachorros
+-- descobertos dá coleiras, giros, Cash e títulos"): os marcos de Shared/DexRewards viram conquistas (saem sozinhas,
+-- com título)
+for _, m in ipairs(DexRewards.MILESTONES) do
+	local _, goal = DexRewards.Progress(m, {})
+	if goal > 0 then
+		table.insert(ACHIEVEMENTS, {
+			Id = m.Id,
+			Icon = m.Icon,
+			Name = m.Name,
+			Desc = DexRewards.DescOf(m),
+			Goal = goal,
+			Get = function(data)
+				return (DexRewards.Progress(m, data.Discovered))
+			end,
+			Reward = m.Reward,
+			Title = m.Title,
+			Dex = true,
+		})
+	end
+end
 local ACH_BY_ID = {}
 for _, a in ipairs(ACHIEVEMENTS) do
 	ACH_BY_ID[a.Id] = a
@@ -594,7 +632,7 @@ local function ensure(player, data)
 			p.Ach[id] = nil
 		end
 	end
-	if type(p.Title) ~= "string" or not (ACH_BY_ID[p.Title] and ACH_BY_ID[p.Title].Title and p.Ach[p.Title]) then
+	if type(p.Title) ~= "string" or not ((ACH_BY_ID[p.Title] and ACH_BY_ID[p.Title].Title and p.Ach[p.Title]) or ProgressionService.ExtraTitle(data, p.Title)) then
 		p.Title = nil
 	end
 	local login = type(p.Login) == "table" and p.Login or {}
@@ -637,6 +675,15 @@ end
 
 local validated = {} -- [player] = data já validado nesta sessão
 
+-- 🎟️ títulos ganhos fora das conquistas (Passe de Temporada): id "x:<título>" → o título, se o jogador tem
+function ProgressionService.ExtraTitle(data, id)
+	if type(id) ~= "string" or string.sub(id, 1, 2) ~= "x:" then
+		return nil
+	end
+	local title = string.sub(id, 3)
+	return type(data) == "table" and type(data.ExtraTitles) == "table" and data.ExtraTitles[title] == true and title or nil
+end
+
 local function progressOf(player)
 	local data = DataService.Get(player)
 	if not (data and data.Started) then
@@ -668,6 +715,16 @@ local function rewardText(r)
 	if r.Spin then
 		table.insert(parts, "+1 🎰 Spin")
 	end
+	if r.Spins then
+		table.insert(parts, "+" .. r.Spins .. " 🎰 Spin" .. (r.Spins > 1 and "s" or ""))
+	end
+	if r.LuckySpins then
+		table.insert(parts, "+" .. r.LuckySpins .. " 🍀 Lucky Spin" .. (r.LuckySpins > 1 and "s" or ""))
+	end
+	if r.Leash then
+		local l = Config.LEASH[r.Leash[1]]
+		table.insert(parts, "+" .. r.Leash[2] .. " 🐾 " .. (l and l.Name or "Leash") .. (r.Leash[2] > 1 and "es" or ""))
+	end
 	return table.concat(parts, "  ")
 end
 
@@ -676,6 +733,19 @@ local function grant(player, data, reward)
 	local r = resolveReward(player, data, reward)
 	if r.Spin then
 		data.Spins = (tonumber(data.Spins) or 0) + 1
+		DataService.MarkDirty(player)
+	end
+	if r.Spins then
+		data.Spins = (tonumber(data.Spins) or 0) + r.Spins
+		DataService.MarkDirty(player)
+	end
+	if r.LuckySpins then
+		data.LuckySpins = (tonumber(data.LuckySpins) or 0) + r.LuckySpins
+		DataService.MarkDirty(player)
+	end
+	if r.Leash and r.Leash[2] > 0 then
+		data.Leashes = type(data.Leashes) == "table" and data.Leashes or {}
+		data.Leashes[r.Leash[1]] = (tonumber(data.Leashes[r.Leash[1]]) or 0) + r.Leash[2]
 		DataService.MarkDirty(player)
 	end
 	if r.Egg and not EggService.Give(player) then
@@ -784,6 +854,7 @@ local function claimMission(player, m, label)
 	m.Claimed = true
 	local text = grant(player, data, m.Reward)
 	local message = "📜 " .. label .. ": " .. text
+	ProgressionService.Claimed:Fire(player, m == p.Quick and "Quick" or "Daily")
 	-- bônus: as 3 diárias resgatadas
 	if not p.Bonus then
 		local all = true
@@ -794,6 +865,7 @@ local function claimMission(player, m, label)
 			p.Bonus = true
 			local bonus = grant(player, data, { Cash = cashUnit(data) * 2, Egg = true })
 			remotes.Progress:FireClient(player, "bonus", { Reward = bonus })
+			ProgressionService.Claimed:Fire(player, "DailyBonus")
 			message ..= "   🎁 Daily Bonus: " .. bonus
 		end
 	end
@@ -819,6 +891,7 @@ local function claimDaily(player)
 	DataService.MarkDirty(player)
 	markState(player)
 	checkDirty[player] = true
+	ProgressionService.Claimed:Fire(player, "Login")
 	return true, string.format("🎁 Day %d (%d-day streak): %s", index, login.Streak, text)
 end
 
@@ -847,13 +920,17 @@ local function reroll(player, index)
 end
 
 local function setTitle(player, id)
-	local p = progressOf(player)
+	local p, data = progressOf(player)
 	if not p then
 		return false
 	end
 	if id == nil or id == "" then
 		p.Title = nil
 		player:SetAttribute("Title", nil)
+	elseif ProgressionService.ExtraTitle(data, id) then
+		-- 🎟️ título de fora das conquistas (Passe de Temporada: "x:<título>")
+		p.Title = id
+		player:SetAttribute("Title", ProgressionService.ExtraTitle(data, id))
 	else
 		local a = type(id) == "string" and ACH_BY_ID[id]
 		if not (a and a.Title and p.Ach[id]) then
@@ -912,11 +989,21 @@ local function snapshot(player)
 			Have = math.min(a.Goal, a.Get(data, p.Stats)),
 			Done = done,
 			Title = a.Title,
+			Dex = a.Dex,
 			Reward = rewardText(resolveReward(player, data, a.Reward)),
 		})
 		if done and a.Title then
 			table.insert(titles, { Id = a.Id, Title = a.Title })
 		end
+	end
+	-- 🎟️ títulos do Passe de Temporada (data.ExtraTitles)
+	local extras = {}
+	for title in pairs(type(data.ExtraTitles) == "table" and data.ExtraTitles or {}) do
+		table.insert(extras, title)
+	end
+	table.sort(extras)
+	for _, title in ipairs(extras) do
+		table.insert(titles, { Id = "x:" .. title, Title = title })
 	end
 	return {
 		Daily = daily,
@@ -1084,9 +1171,19 @@ function ProgressionService.Start(r)
 		end
 	end)
 	-- upgrades de casa/tigela e conquistas que dependem do perfil
+	local dexSeen = {} -- [player] = espécies descobertas da última vez (📖 Dex: troca/evolução também descobrem)
+	Players.PlayerRemoving:Connect(function(player)
+		dexSeen[player] = nil
+	end)
 	DataService.Changed.Event:Connect(function(player, data)
 		if not data.Started then
 			return
+		end
+		local dex = DexRewards.Count(data.Discovered)
+		if dexSeen[player] ~= dex then
+			dexSeen[player] = dex
+			checkDirty[player] = true
+			markState(player)
 		end
 		-- níveis comprados no estande
 		local bowlUps = (data.Stand or 1) - 1
@@ -1106,7 +1203,7 @@ function ProgressionService.Start(r)
 		end
 		local p = ensure(player, data)
 		local a = p.Title and ACH_BY_ID[p.Title]
-		player:SetAttribute("Title", a and a.Title or nil)
+		player:SetAttribute("Title", a and a.Title or ProgressionService.ExtraTitle(data, p.Title) or nil)
 		checkDirty[player] = true
 		markState(player)
 		if p.Login.Last ~= today() then

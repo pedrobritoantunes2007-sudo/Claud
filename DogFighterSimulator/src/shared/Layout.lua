@@ -94,6 +94,30 @@ function Layout.IsletCenter(angleDegrees)
 	return Vector3.new(math.cos(a), 0, math.sin(a)) * (Layout.ISLAND_RADIUS + 66)
 end
 
+-- 🌊 BEIRA DO MUNDO (2026-10-25, o dono: "arrumar o mar (é bug): a água vai cobrir o mapa inteiro e ir bem mais longe;
+-- coloco um chão invisível no fundo do mar e paredes invisíveis nos lados, para ninguém cair no limbo"). Antes o mar era
+-- um círculo de 3600 em volta do centro + outro em volta da Pawville: fora deles (e embaixo da água) era o vazio.
+--   MinX/MaxX/MinZ/MaxZ = onde ficam as PAREDES invisíveis (todas as ilhas, a 🏡 Pawville e a 🏆 Ilha do Ranking ficam
+--   bem dentro: tools/preview/sea_test.luau confere); a ÁGUA continua SeaMargin studs depois das paredes.
+--   FloorY = fundo do mar = topo do CHÃO invisível · WallTop = altura das paredes (bem acima do ☁️ Reino das Nuvens)
+--   RescueY = rede de segurança do servidor: abaixo disso (ou do lado de fora das paredes) volta para a terra
+Layout.WORLD = {
+	MinX = -4400,
+	MaxX = 4400,
+	MinZ = -5600,
+	MaxZ = 6800,
+	SeaMargin = 1200,
+	FloorY = -20,
+	WallTop = 2000,
+	RescueY = -60,
+}
+
+-- está dentro das paredes do mundo? (margin > 0 = mais para dentro)
+function Layout.InWorld(position, margin)
+	local W, m = Layout.WORLD, margin or 0
+	return position.X > W.MinX + m and position.X < W.MaxX - m and position.Z > W.MinZ + m and position.Z < W.MaxZ - m
+end
+
 -- 🛡️ (2026-10, pedido do dono: "quando entram em PvP não podem sair voando de lá, tipo uma barreira invisível") o
 -- chão do Coliseu vale até esta altura (voando lá dentro também é PvP) e é o teto da BARREIRA invisível: quem está no
 -- PvP não sai voando (nem por cima nem pelos lados) — só andando pelos portões

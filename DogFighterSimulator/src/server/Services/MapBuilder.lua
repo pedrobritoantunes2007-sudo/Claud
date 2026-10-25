@@ -470,14 +470,76 @@ local function setupTerrainLook()
 end
 
 -- só a água do mar (o chão é de blocos)
+-- 🌊 (2026-10-25, o dono: "arrumar o mar (é bug): a água vai cobrir o mapa inteiro e ir bem mais longe") antes eram 2
+-- círculos (3600 em volta do centro + Village.OCEAN_R em volta da Pawville): entre eles ficava um buraco sem mar e,
+-- depois deles, o vazio. Agora é UM retângulo que cobre o mundo inteiro (Layout.WORLD) e passa SeaMargin studs das
+-- paredes invisíveis, todo com a mesma fundura (do fundo FloorY até a superfície). Em placas de 2048 (com pausa).
 local function buildWater()
 	terrain:Clear()
-	-- oceano do mapa inteiro, todo com a mesma fundura
-	terrain:FillCylinder(CFrame.new(0, (WATER - 20) / 2, 0), WATER + 20, 3600, Enum.Material.Water)
-	-- 🏡 a Pawville fica bem longe (fora desse oceano): mar próprio em volta dela, emendando no oceano do mapa
-	local Village = require(ReplicatedStorage.Shared.Village)
-	local vc = Village.Center
-	terrain:FillCylinder(CFrame.new(vc.X, (WATER - 20) / 2, vc.Z), WATER + 20, Village.OCEAN_R, Enum.Material.Water)
+	local W = Layout.WORLD
+	local x0, x1 = W.MinX - W.SeaMargin, W.MaxX + W.SeaMargin
+	local z0, z1 = W.MinZ - W.SeaMargin, W.MaxZ + W.SeaMargin
+	local TILE = 2048
+	for x = x0, x1 - 1, TILE do
+		for z = z0, z1 - 1, TILE do
+			local sx, sz = math.min(TILE, x1 - x), math.min(TILE, z1 - z)
+			terrain:FillBlock(CFrame.new(x + sx / 2, (WATER + W.FloorY) / 2, z + sz / 2), Vector3.new(sx, WATER - W.FloorY, sz), Enum.Material.Water)
+			if building then
+				task.wait()
+			end
+		end
+	end
+end
+
+-- 🧱 (2026-10-25, o dono: "coloco um chão invisível no fundo do mar e paredes invisíveis nos lados, para ninguém cair
+-- no limbo") CHÃO invisível embaixo do mar inteiro (o topo fica no fundo da água: Layout.WORLD.FloorY) + 4 PAREDES
+-- invisíveis na beira do mundo, do fundo até bem acima das nuvens. Peças de no máximo 2048 (limite do Roblox), sem
+-- toque nem sombra. A rede de segurança do servidor (IslandService) traz de volta quem passar mesmo assim.
+local LIMIT_THICK = 16
+function MapBuilder.BuildLimits()
+	local old = workspace:FindFirstChild("Limites")
+	if old then
+		old:Destroy()
+	end
+	local W = Layout.WORLD
+	local folder = Instance.new("Folder")
+	folder.Name = "Limites"
+	local count = 0
+	local function slab(name, x0, x1, y0, y1, z0, z1)
+		local MAX = 2048
+		for x = x0, x1 - 0.001, MAX do
+			for z = z0, z1 - 0.001, MAX do
+				for y = y0, y1 - 0.001, MAX do
+					local sx, sy, sz = math.min(MAX, x1 - x), math.min(MAX, y1 - y), math.min(MAX, z1 - z)
+					make("Part", {
+						Name = name,
+						Anchored = true,
+						CanCollide = true,
+						CanTouch = false,
+						CastShadow = false,
+						Transparency = 1,
+						Material = SM,
+						Size = Vector3.new(sx, sy, sz),
+						CFrame = CFrame.new(x + sx / 2, y + sy / 2, z + sz / 2),
+					}, folder)
+					count += 1
+				end
+			end
+		end
+	end
+	local x0, x1 = W.MinX - W.SeaMargin, W.MaxX + W.SeaMargin
+	local z0, z1 = W.MinZ - W.SeaMargin, W.MaxZ + W.SeaMargin
+	local bottom = W.FloorY - LIMIT_THICK
+	-- chão: embaixo de toda a água (também depois das paredes)
+	slab("ChaoInvisivel", x0, x1, bottom, W.FloorY, z0, z1)
+	-- paredes: norte/sul (ao longo de X) e oeste/leste (ao longo de Z), encostadas por fora da linha do Layout.WORLD
+	slab("ParedeInvisivel", W.MinX - LIMIT_THICK, W.MaxX + LIMIT_THICK, bottom, W.WallTop, W.MinZ - LIMIT_THICK, W.MinZ)
+	slab("ParedeInvisivel", W.MinX - LIMIT_THICK, W.MaxX + LIMIT_THICK, bottom, W.WallTop, W.MaxZ, W.MaxZ + LIMIT_THICK)
+	slab("ParedeInvisivel", W.MinX - LIMIT_THICK, W.MinX, bottom, W.WallTop, W.MinZ, W.MaxZ)
+	slab("ParedeInvisivel", W.MaxX, W.MaxX + LIMIT_THICK, bottom, W.WallTop, W.MinZ, W.MaxZ)
+	folder.Parent = workspace
+	print(string.format("[Mar] chão e paredes invisíveis: %d peças", count))
+	return folder
 end
 
 -- Tira a água de Terrain de baixo da terra firme (ilha, ilhotas, rochedo, Gêiser). Sem isso, quem procura o
@@ -1381,6 +1443,8 @@ function MapBuilder.Build()
 	setupLighting()
 	setupTerrainLook()
 	planGround()
+	-- 🧱 chão e paredes invisíveis primeiro (ninguém cai no vazio enquanto o resto do mapa monta)
+	MapBuilder.BuildLimits()
 	local existing = workspace:FindFirstChild("Map")
 	if existing then
 		-- mapa colado à mão: não reconstrói, mas garante a água e o chão de blocos

@@ -7,11 +7,16 @@
 --   ("request", player) | ("state", estado) | ("closed", motivo) | ("done", { Got = n, Gave = n })
 -- Regras: não troca o cachorro equipado nem favoritos ⭐; o canil (Config.MaxDogs) precisa caber;
 -- tudo é conferido de novo na hora da troca. O cachorro chega com o nome padrão da espécie.
+-- (2026-10-25, pedido do dono: "os dois confirmam a troca e, se alguém mudar a oferta, a confirmação volta a zero.
+-- Também aparece o valor de cada cachorro, com destaque para shiny e Gold."): o READY virou CONFIRM (as duas
+-- confirmações zeram com qualquer mudança, como antes) e cada cachorro vai com o 💎 valor (Shared/Variants.Value) e
+-- o ✨ Shiny / 🥇 Gold / 🌈 Rainbow — o estado leva o total de cada lado. Shiny e versão vão junto na troca.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local DogData = require(ReplicatedStorage.Shared.DogData)
+local Variants = require(ReplicatedStorage.Shared.Variants)
 local DataService = require(script.Parent.DataService)
 
 local TradeService = {}
@@ -35,30 +40,57 @@ local function snapshot(data, uid)
 	if not dog then
 		return nil
 	end
-	return { Id = dog.Id, Species = dog.Species, Level = dog.Level, Stars = dog.Stars }
+	local species = DogData.Species[dog.Species]
+	return {
+		Id = dog.Id,
+		Species = dog.Species,
+		Level = dog.Level,
+		Stars = dog.Stars,
+		Shiny = dog.Shiny,
+		Tier = dog.Tier,
+		Value = Variants.Value(dog, species and species.Rarity),
+	}
 end
 
+-- oferta de um lado + o 💎 valor total
 local function offerOf(trade, player)
 	local data = DataService.Get(player)
-	local list = {}
+	local list, total = {}, 0
 	for _, uid in ipairs(trade.Offer[player]) do
 		local s = snapshot(data, uid)
 		if s then
 			table.insert(list, s)
+			total += s.Value
 		end
 	end
-	return list
+	return list, total
+end
+
+-- cachorros que este jogador está oferecendo agora (o 🧬 EVOLUIR deixa eles de fora)
+function TradeService.Offered(player)
+	local set = {}
+	local trade = trades[player]
+	if trade then
+		for _, uid in ipairs(trade.Offer[player] or {}) do
+			set[uid] = true
+		end
+	end
+	return set
 end
 
 local function push(trade)
 	for _, p in ipairs({ trade.A, trade.B }) do
 		local o = other(trade, p)
 		if p.Parent then
+			local mine, myValue = offerOf(trade, p)
+			local theirs, theirValue = offerOf(trade, o)
 			remotes.TradeEvent:FireClient(p, "state", {
 				Partner = o.DisplayName,
 				PartnerId = o.UserId,
-				Mine = offerOf(trade, p),
-				Theirs = offerOf(trade, o),
+				Mine = mine,
+				Theirs = theirs,
+				MyValue = myValue,
+				TheirValue = theirValue,
 				MyReady = trade.Ready[p] == true,
 				TheirReady = trade.Ready[o] == true,
 				Countdown = trade.CountdownEnd and math.max(0, trade.CountdownEnd - os.clock()) or nil,
@@ -155,6 +187,8 @@ local function execute(trade)
 				XP = dog.XP,
 				Fav = false,
 				Stars = dog.Stars,
+				Shiny = dog.Shiny, -- ✨🥇🌈 vão junto
+				Tier = dog.Tier,
 			}
 			data.Discovered[dog.Species] = true
 		end

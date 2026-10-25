@@ -884,6 +884,11 @@ function MainDetails.Build(map, groundAt)
 	end)
 	-- 🏡 portal da Pawville (World/MainIsland): o miúdo não cai em cima nem do lado dele
 	ctx:Reserve(Layout.PAWVILLE_PORTAL.X, Layout.PAWVILLE_PORTAL.Z, 46)
+	-- 🏆 portal da Ilha do Ranking (World/MainIsland, na Praça dos Portais) — com os obeliscos dos lados
+	do
+		local a = math.rad(require(game:GetService("ReplicatedStorage").Shared.RankIsland).PLAZA_ANGLE)
+		ctx:Reserve(math.cos(a) * Layout.PORTAL_RING, math.sin(a) * Layout.PORTAL_RING, 46)
+	end
 	-- (2026-10: sem casinhas — Config.HOUSES = false — os enfeites dos terrenos não entram: caixa de correio,
 	-- vasos e barris ficariam soltos no bosque)
 	local steps = { plaza, paths, coast, colosseumDetail, plazaMore, geyserDetail, bossBase, beachMore, lawn }

@@ -1,10 +1,14 @@
 -- 🤝 TRADE (cliente): lista de jogadores do servidor, aviso de pedido (ACCEPT/DECLINE) e a janela
--- de troca (você dá / ele dá / seus cachorros / READY). Quem decide tudo é o TradeService no servidor.
+-- de troca (você dá / ele dá / seus cachorros / CONFIRM). Quem decide tudo é o TradeService no servidor.
+-- (2026-10-25) cada cachorro mostra o 💎 valor (Shared/Variants.Value) e o selo ✨ SHINY / 🥇 GOLD / 🌈 RAINBOW com a
+-- borda brilhando; cada lado mostra o total e a barra diz se a troca está justa. Mudou a oferta = as 2 confirmações
+-- voltam a zero (o servidor manda o estado novo).
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local DogData = require(ReplicatedStorage.Shared.DogData)
+local Variants = require(ReplicatedStorage.Shared.Variants)
 local UI = script.Parent.Parent:WaitForChild("UI")
 local Kit = require(UI:WaitForChild("Kit"))
 local Net = require(script.Parent.Parent:WaitForChild("Net"))
@@ -16,32 +20,64 @@ local player = Players.LocalPlayer
 
 local REQUEST_TIME = 20
 
--- célula de cachorro: retrato + level, borda na cor da raridade
+-- 💎 1.234 / 12.3K
+local function valueText(v)
+	return Config.Format(tonumber(v) or 0)
+end
+
+-- célula de cachorro: retrato + level + 💎 valor, borda na cor da raridade (ou dourada/arco-íris/azul-shiny)
 local function dogCell(parent, dog, order, onClick, faded)
 	local species = DogData.Species[dog.Species]
 	local rarity = species and Config.RARITY[species.Rarity]
 	if not rarity then
 		return nil
 	end
+	local special = Variants.Color(dog)
 	local cell = make("TextButton", {
 		Name = dog.Id,
 		LayoutOrder = order,
 		Text = "",
 		AutoButtonColor = true,
-		BackgroundColor3 = rarity.Color:Lerp(C.Dark, 0.6),
+		BackgroundColor3 = (special or rarity.Color):Lerp(C.Dark, 0.6),
 		BorderSizePixel = 0,
 		ZIndex = 4,
 	}, parent)
 	Kit.Corner(cell, 10)
-	Kit.Stroke(cell, rarity.Color, 3)
-	Kit.DogPortrait(cell, { Position = UDim2.fromScale(0.04, 0.02), Size = UDim2.fromScale(0.92, 0.72), ZIndex = 5 }, dog.Species)
+	local stroke = Kit.Stroke(cell, special or rarity.Color, special and 4 or 3)
+	-- (borda brilhando: o degradê só pinta por cima de uma borda branca)
+	if Variants.TierOf(dog) > 0 and stroke then
+		stroke.Color = Color3.new(1, 1, 1)
+		Kit.Shimmer(stroke, Variants.TierOf(dog) == 2 and Kit.RAINBOW or Kit.GOLDEN)
+	end
+	Kit.DogPortrait(cell, { Position = UDim2.fromScale(0.04, 0.02), Size = UDim2.fromScale(0.92, 0.6), ZIndex = 5 }, dog.Species, dog)
 	Kit.Text(cell, {
-		Position = UDim2.fromScale(0.04, 0.74),
-		Size = UDim2.fromScale(0.92, 0.24),
+		Position = UDim2.fromScale(0.04, 0.6),
+		Size = UDim2.fromScale(0.92, 0.18),
 		Text = "Lv." .. tostring(dog.Level),
 		TextColor3 = rarity.Color,
 		ZIndex = 6,
 	})
+	local value = dog.Value or Variants.Value(dog, species.Rarity)
+	Kit.Text(cell, {
+		Position = UDim2.fromScale(0.04, 0.79),
+		Size = UDim2.fromScale(0.92, 0.18),
+		Text = "💎 " .. valueText(value),
+		TextColor3 = C.Gold,
+		ZIndex = 6,
+	})
+	local label = Variants.Label(dog)
+	if label ~= "" then
+		local chip = Kit.Text(cell, {
+			Position = UDim2.fromScale(0.02, 0.02),
+			Size = UDim2.fromScale(0.96, 0.17),
+			Text = label,
+			TextColor3 = special or C.Gold,
+			BackgroundTransparency = 0.25,
+			BackgroundColor3 = C.Dark,
+			ZIndex = 7,
+		})
+		Kit.Corner(chip, 6)
+	end
 	if faded then
 		cell.BackgroundTransparency = 0.6
 		Kit.Text(cell, { Position = UDim2.fromScale(0.04, 0.3), Size = UDim2.fromScale(0.92, 0.2), Text = faded, ZIndex = 7 })
@@ -198,7 +234,7 @@ function Trade.Start(HUD)
 		}, slots)
 		return box, label, readyLabel, slots
 	end
-	local _, _, myReadyLabel, mySlots = offerBox(0, "YOU GIVE")
+	local _, myTitle, myReadyLabel, mySlots = offerBox(0, "YOU GIVE")
 	local _, theirTitle, theirReadyLabel, theirSlots = offerBox(0.51, "THEY GIVE")
 
 	local status = Kit.Text(tradePage, {
@@ -229,7 +265,7 @@ function Trade.Start(HUD)
 	local readyButton = Kit.Button(tradePage, {
 		Position = UDim2.fromScale(0.76, 0.5),
 		Size = UDim2.fromScale(0.24, 0.17),
-		Text = "READY ✔",
+		Text = "CONFIRM ✔",
 		ZIndex = 3,
 	}, C.Green, function()
 		if state then
@@ -247,7 +283,7 @@ function Trade.Start(HUD)
 	Kit.Text(tradePage, {
 		Position = UDim2.fromScale(0.76, 0.84),
 		Size = UDim2.fromScale(0.24, 0.15),
-		Text = "Tap your dogs to add or remove them.\n⭐ favorites and the equipped dog can't be traded.",
+		Text = "Tap your dogs to add or remove them. Any change resets BOTH confirms.\n⭐ favorites and the equipped dog can't be traded.",
 		TextColor3 = C.Muted,
 		TextWrapped = true,
 		ZIndex = 3,
@@ -275,7 +311,7 @@ function Trade.Start(HUD)
 		local dogs = Net.SortedDogs()
 		local parts = {}
 		for _, dog in ipairs(dogs) do
-			table.insert(parts, dog.Id .. ":" .. dog.Level .. (dog.Fav and "f" or "") .. (offered[dog.Id] and "o" or "") .. (dog.Id == profile.Equipped and "e" or ""))
+			table.insert(parts, dog.Id .. ":" .. dog.Level .. (dog.Fav and "f" or "") .. (offered[dog.Id] and "o" or "") .. (dog.Id == profile.Equipped and "e" or "") .. (dog.Shiny and "s" or "") .. tostring(dog.Tier or 0))
 		end
 		local key = table.concat(parts, ",")
 		if key == lastListKey then
@@ -303,7 +339,10 @@ function Trade.Start(HUD)
 		if not state then
 			return
 		end
-		theirTitle.Text = string.upper(state.Partner) .. " GIVES"
+		-- 💎 valor de cada lado (o servidor soma: Shared/Variants.Value)
+		local mine, theirs = tonumber(state.MyValue) or 0, tonumber(state.TheirValue) or 0
+		myTitle.Text = "YOU GIVE  💎 " .. valueText(mine)
+		theirTitle.Text = string.upper(state.Partner) .. " GIVES  💎 " .. valueText(theirs)
 		clear(mySlots)
 		for i, dog in ipairs(state.Mine) do
 			dogCell(mySlots, dog, i, function()
@@ -314,20 +353,30 @@ function Trade.Start(HUD)
 		for i, dog in ipairs(state.Theirs) do
 			dogCell(theirSlots, dog, i, nil)
 		end
-		myReadyLabel.Text = state.MyReady and "✔ READY" or ""
-		theirReadyLabel.Text = state.TheirReady and "✔ READY" or ""
-		readyButton.Text = state.MyReady and "NOT READY" or "READY ✔"
+		myReadyLabel.Text = state.MyReady and "✔ CONFIRMED" or ""
+		theirReadyLabel.Text = state.TheirReady and "✔ CONFIRMED" or ""
+		readyButton.Text = state.MyReady and "UNCONFIRM" or "CONFIRM ✔"
 		Kit.SetButtonColor(readyButton, state.MyReady and C.Panel2 or C.Green)
 		if state.Countdown then
 			countdownEnd = os.clock() + state.Countdown
 		else
 			countdownEnd = nil
+			-- ⚖️ troca justa? (diferença grande de valor = aviso)
+			local fair = ""
+			if mine > 0 or theirs > 0 then
+				local hi, lo = math.max(mine, theirs), math.min(mine, theirs)
+				if lo < hi * 0.6 then
+					fair = mine > theirs and "  ⚠️ You give MORE value!" or "  👍 You get more value"
+				else
+					fair = "  ⚖️ Fair trade"
+				end
+			end
 			if state.MyReady and not state.TheirReady then
-				status.Text = "Waiting for " .. state.Partner .. " to press READY..."
+				status.Text = "Waiting for " .. state.Partner .. " to CONFIRM..." .. fair
 			elseif state.TheirReady and not state.MyReady then
-				status.Text = state.Partner .. " is READY! Check the dogs and press READY"
+				status.Text = state.Partner .. " CONFIRMED! Check the dogs and press CONFIRM" .. fair
 			else
-				status.Text = "Add dogs (max " .. tostring(state.Max) .. "), then both press READY"
+				status.Text = "Add dogs (max " .. tostring(state.Max) .. "), then both press CONFIRM" .. fair
 			end
 		end
 		refreshMyList()

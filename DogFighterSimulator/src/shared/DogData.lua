@@ -1281,10 +1281,12 @@ function DogData.RollRarity(eggId, dogLevel, rng, luck)
 	return list[#list].Rarity
 end
 
+-- (🎟️ 2026-10-25: os exclusivos do Passe de Temporada — Exclusive = true — ficam de fora de toda lista de sorteio:
+-- selvagens, roleta, ovos e compras aleatórias)
 function DogData.SpeciesOfRarity(rarity)
 	local list = {}
 	for _, id in ipairs(DogData.Order) do
-		if DogData.Species[id].Rarity == rarity then
+		if DogData.Species[id].Rarity == rarity and not DogData.Species[id].Exclusive then
 			table.insert(list, id)
 		end
 	end
@@ -1743,6 +1745,8 @@ DogData.SPECIES_ELEMENTS = {
 	sun_dragon = { "Fire", "Light", "Fly" },
 	-- 🎃 Halloween
 	clown_dog = { "Shadow", "Fire" },
+	-- 🎟️ exclusivo do Passe de Temporada 1
+	aurora_pup = { "Light", "Ice", "Fly" },
 }
 
 -- 🆚 VANTAGEM DE ELEMENTO (pedido do dono, estilo Pokémon): cada elemento bate FORTE em 2 outros.
@@ -2058,6 +2062,7 @@ DogData.RANGED = {
 	seraph_hound = "Holy",
 	frost_phoenix = "Ice",
 	rainbow_unicorn = "Rainbow",
+	aurora_pup = "Rainbow",
 	mecha_hound = "Photon",
 	planet_hound = "Meteor",
 	-- divino
@@ -2125,6 +2130,8 @@ DogData.GAME_SIZE = {
 	thunder_colossus = 0.53, titan_mastiff = 0.56, void_beast = 0.66, volcanic_cerberus = 0.51,
 	-- divine
 	sun_dragon = 0.8,
+	-- 🎟️ exclusivos do Passe de Temporada
+	aurora_pup = 0.82,
 }
 function DogData.GameScale(speciesId)
 	return DogData.GAME_SIZE[speciesId] or 1

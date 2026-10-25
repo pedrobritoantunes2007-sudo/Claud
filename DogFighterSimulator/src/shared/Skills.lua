@@ -397,6 +397,13 @@ Skills.BySpecies = {
 		S("SK_clown_dog_3", "Jack-in-the-Box", "shadow", "A jack-in-the-box pops up where you aim: BOING! The spring clown launches enemies up and makes them dizzy.", "Uma caixa-surpresa sobe na setinha: BOING! O palhaço de mola joga todo mundo para cima e deixa tonto.", C(255, 135, 30)),
 		S("SK_clown_dog_4", "Circus of Doom", "crown", "SUPREME: a haunted circus tent drops where you aim, pumpkins rain, clown heads fly out and it ends in a confetti blast.", "SUPREMO: uma tenda de circo assombrada cai na setinha, chovem abóboras, cabeças de palhaço voam e tudo explode em confete.", C(255, 120, 20)),
 	},
+	-- 🎟️ AURORA PUP (exclusivo do Passe de Temporada 1): os poderes da fênix de gelo com nome de aurora
+	-- (SpecialsPacks/Skills_Season.lua: cada SK_aurora_pup_* roda o SK_frost_phoenix_* do mesmo número)
+	aurora_pup = {
+		S("SK_aurora_pup_2", "Aurora Rebirth", "ice", "Wraps itself in aurora light and heals; the light bursts into a freezing storm and glowing feathers fly where you aim.", "Se enrola na luz da aurora e se cura; a luz explode numa tempestade que congela e penas brilhantes voam até a setinha.", C(140, 255, 225)),
+		S("SK_aurora_pup_3", "Northern Wings", "ice", "Flaps its aurora wings into a freezing blizzard.", "Bate as asas de aurora e solta uma nevasca que congela.", C(150, 200, 255)),
+		S("SK_aurora_pup_4", "AURORA SKY", "crown", "SUPREME: a giant aurora phoenix crosses the frozen sky and icicles rain down.", "SUPREMO: uma fênix de aurora gigante cruza o céu congelado e caem pingentes.", C(255, 150, 225)),
+	},
 	sun_dragon = {
 		S("SK_sun_dragon_2", "Sunfire Breath", "fire", "A sweeping beam of golden sunfire toward where you aim, then a small sun crashes there. Heals.", "Raio de fogo solar dourado varrendo na direção da setinha; um pequeno sol cai lá e explode; cura.", C(255, 200, 70)),
 		S("SK_sun_dragon_3", "Solar Wings", "wing", "Wings ablaze, dives through the enemy and bursts in a solar flare. Heals.", "Asas em chamas, mergulha atravessando o inimigo e explode numa erupção solar; cura.", C(255, 200, 70)),

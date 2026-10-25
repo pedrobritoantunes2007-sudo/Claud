@@ -1101,6 +1101,31 @@ function DRAW.clown(p)
 	p:shine(46, 55, 5, 6, 0, 0.5)
 end
 
+-- 🎩 (2026-10-25) cartola de acessório (botão STYLE): copa alta preta, fita vermelha e aba larga
+function DRAW.hat(p)
+	p:group(function()
+		p:box(50, 76, 86, 14, P.hole, 6)
+		p:box(50, 44, 52, 58, P.hole, 8)
+	end)
+	p:box(50, 62, 52, 12, P.red, 2, 0, { ink = false })
+	p:box(66, 62, 8, 12, P.redD, 2, 0, { ink = false })
+	p:shine(36, 34, 8, 22, 0, 0.25)
+end
+-- 🐺 (2026-10-25) bandeira do clã (botão CLAN): mastro e flâmula com a patinha
+function DRAW.flag(p)
+	p:line(24, 12, 24, 90, 8, P.brownD)
+	p:circle(24, 10, 12, P.gold)
+	p:group(function()
+		p:box(54, 34, 56, 40, P.red, 6, 0)
+		p:box(74, 34, 20, 40, P.red, 4, 0)
+	end)
+	p:circle(54, 38, 16, WHITE, { ink = false })
+	p:circle(46, 26, 7, WHITE, { ink = false })
+	p:circle(54, 23, 7, WHITE, { ink = false })
+	p:circle(62, 26, 7, WHITE, { ink = false })
+	p:shine(40, 22, 6, 14, 0, 0.3)
+end
+
 ---------------------------------------------------------------- API
 
 ---------------------------------------------------------------- emoji -> desenho
@@ -1131,6 +1156,7 @@ local EMOJI = {
 	["🏠"] = "house", ["🏡"] = "house",
 	["🔑"] = "key",
 	["🎟"] = "ticket", ["🎫"] = "ticket",
+	["🎩"] = "hat", ["🧢"] = "hat", ["🧬"] = "sparkle", ["🌧"] = "cloud", ["🥇"] = "medal",
 	["🔒"] = "lock", ["🔓"] = "lock",
 	["⚙"] = "gear", ["🚧"] = "gear", ["🛠"] = "gear", ["🖥"] = "gear",
 	["🤝"] = "trade", ["🔄"] = "trade",

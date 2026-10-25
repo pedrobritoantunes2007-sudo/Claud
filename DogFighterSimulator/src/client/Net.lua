@@ -47,7 +47,7 @@ function Net.Power(dog)
 	if not species then
 		return 0
 	end
-	return Config.Stats(species, dog.Level).Power
+	return Config.Stats(species, dog.Level, dog).Power -- (✨🥇🌈 contam: Shared/Variants)
 end
 
 function Net.DogCount()

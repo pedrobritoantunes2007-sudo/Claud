@@ -8,6 +8,8 @@ local Signal = require(ReplicatedStorage.Shared.Signal)
 local Config = require(ReplicatedStorage.Shared.Config)
 local DogData = require(ReplicatedStorage.Shared.DogData)
 local DogBuilder = require(ReplicatedStorage.Shared.DogBuilder)
+local Variants = require(ReplicatedStorage.Shared.Variants)
+local Accessories = require(ReplicatedStorage.Shared.Accessories)
 
 local Fighters = {}
 Fighters.List = {} -- [model] = fighter
@@ -148,7 +150,41 @@ function Fighters.RefreshLabel(f)
 		if f.Kind ~= "npc" then
 			f.Billboard.Nome.TextColor3 = f.Mode == "pvp" and Color3.fromRGB(255, 120, 120) or Color3.new(1, 1, 1)
 		end
-		f.Billboard.Sub.Text = f.Kind == "npc" and ("Lv." .. f.Level) or ("Lv." .. f.Level .. "  " .. rarity.Label)
+		-- ✨ shiny / 🥇 Gold / 🌈 Rainbow aparecem na plaquinha (Shared/Variants)
+		local special = Variants.Label(f.Variant, true)
+		local sub = f.Kind == "npc" and ("Lv." .. f.Level) or ("Lv." .. f.Level .. "  " .. rarity.Label)
+		f.Billboard.Sub.Text = special ~= "" and (sub .. "  " .. special) or sub
+		f.Billboard.Sub.TextColor3 = Variants.Color(f.Variant) or rarity.Color
+		-- 🐺 sigla do clã + 🏅 título em cima da cabeça (ClanService põe o atributo ClanTag; ProgressionService, o Title)
+		local owner = f.Kind == "player" and f.Owner or nil
+		local tag = owner and owner:GetAttribute("ClanTag")
+		local title = owner and owner:GetAttribute("Title")
+		local clan = f.Billboard:FindFirstChild("Cla")
+		local top = {}
+		if type(tag) == "string" and tag ~= "" then
+			table.insert(top, "[" .. tag .. "]")
+		end
+		if type(title) == "string" and title ~= "" then
+			table.insert(top, title)
+		end
+		if #top > 0 then
+			if not clan then
+				clan = Instance.new("TextLabel")
+				clan.Name = "Cla"
+				clan.BackgroundTransparency = 1
+				clan.Position = UDim2.fromScale(0, -0.36)
+				clan.Size = UDim2.new(1, 0, 0.36, 0)
+				clan.Font = Enum.Font.FredokaOne
+				clan.TextScaled = true
+				inked(clan, 1.5)
+				clan.Parent = f.Billboard
+			end
+			clan.Text = table.concat(top, " ")
+			local color = (type(tag) == "string" and tag ~= "") and owner:GetAttribute("ClanColor") or nil
+			clan.TextColor3 = typeof(color) == "Color3" and color or Color3.fromRGB(255, 220, 120)
+		elseif clan then
+			clan:Destroy()
+		end
 	end
 	if f.Model.Parent then
 		f.Model:SetAttribute("DogName", f.DisplayName)
@@ -172,8 +208,15 @@ function Fighters.Spawn(opts)
 		model:SetAttribute("Float", false)
 	end
 	local baseScale = model:GetAttribute("BaseScale")
+	-- ✨ shiny / 🥇 Gold / 🌈 Rainbow: pinta e deixa mais forte · 🎩 acessórios do jogador (todo mundo vê)
+	if opts.Variant then
+		Variants.Paint(model, opts.Variant)
+	end
+	if opts.Accessories then
+		Accessories.Attach(model, opts.Accessories)
+	end
 
-	local stats = Config.Stats(species, opts.Level)
+	local stats = Config.Stats(species, opts.Level, opts.Variant)
 	if opts.Kind == "player" then
 		stats.Speed *= Config.PLAYER_SPEED_MULT * (opts.SpeedBonus or 1)
 	end
@@ -218,6 +261,7 @@ function Fighters.Spawn(opts)
 		Specials = opts.Specials, -- lista (bosses)
 		Level = opts.Level,
 		Stats = stats,
+		Variant = opts.Variant, -- { Shiny, Tier } (Shared/Variants) ou nil
 		DisplayName = opts.DisplayName or species.Name,
 		HipHeight = hip,
 		BaseScale = baseScale,
@@ -247,6 +291,9 @@ function Fighters.Spawn(opts)
 	model.Parent = folder
 	root:SetNetworkOwner(nil)
 	makeBillboard(f)
+	if f.Variant then
+		Fighters.RefreshLabel(f)
+	end
 	CollectionService:AddTag(model, "Dog")
 	Fighters.List[model] = f
 

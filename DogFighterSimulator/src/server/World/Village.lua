@@ -14,6 +14,7 @@ local CollectionService = game:GetService("CollectionService")
 
 local BlockStyle = require(ReplicatedStorage.Shared.BlockStyle)
 local V = require(ReplicatedStorage.Shared.Village)
+local RankIsland = require(ReplicatedStorage.Shared.RankIsland)
 local VillageFolk = require(ReplicatedStorage.Shared.VillageFolk)
 local TG = require(script.Parent.TerrainGen)
 local Deco = require(script.Parent.Deco)
@@ -121,6 +122,8 @@ function Isle.Spec()
 	TG.Pad(s, K.X, K.Z, 122, G, 30)
 	TG.Pad(s, SQ.X, SQ.Z, SQ.R + 8, G, 20)
 	TG.Pad(s, AP.X, AP.Z, 40, G, 18) -- chão plano em volta do portal
+	local RP = RankIsland.VILLAGE_PORTAL
+	TG.Pad(s, RP.X, RP.Z, 32, G, 14) -- 🏆 chão plano do portal da Ilha do Ranking
 	return s
 end
 
@@ -946,10 +949,12 @@ local function mainStreet(ctx)
 	-- 🧭 placa na frente do portal da Arena
 	local AP = V.ARENA_PORTAL
 	local MP = V.MEADOWS_PORTAL
+	local RP = RankIsland.VILLAGE_PORTAL
 	ctx:Put(Details.Signpost, 16, 282, 0, 1.1, {
 		{ "🎓 KENNEL", math.atan2(-(30 - 282), -16) },
 		{ "⚔️ ARENA", math.atan2(-(AP.Z - 282), AP.X - 16) },
 		{ "🌻 MEADOWS", math.atan2(-(MP.Z - 282), MP.X - 16) },
+		{ "🏆 RANKING", math.atan2(-(RP.Z - 282), RP.X - 16) },
 	})
 end
 
@@ -1097,6 +1102,30 @@ local function meadowsPortal(ctx)
 		end
 	end
 	-- (a base do arco tem 60 de largura: reserva tudo para casa/árvore não nascer em cima)
+	ctx:Reserve(P.X, P.Z, 34)
+end
+
+-- 🏆 portal da ILHA DO RANKING (2026-10-25, pedido do dono: "uma ilha separada, com portal na Pawville e na ilha
+-- principal"): à direita do fim da rua principal (espelho do portal da Puppy Meadows), dourado, com a placa
+-- "🏆 RANKING" e 2 troféus de pedra dos lados.
+local RANK_GOLD, RANK_DARK = C(255, 200, 70), C(190, 140, 40)
+local function rankPortal(ctx)
+	local P = RankIsland.VILLAGE_PORTAL
+	local ry = V.Face(P.X, P.Z, 0, 270)
+	local cf = ctx:LocalCF(P.X, ctx:H(P.X, P.Z), P.Z, ry)
+	local model, swirl = Deco.LabeledPortal(ctx:Group("Portal"), cf, RANK_GOLD, RANK_DARK, "RankPortal", "🏆 RANKING")
+	swirl:SetAttribute("PortalTo", RankIsland.Id)
+	swirl:SetAttribute("PortalFrom", V.Id)
+	CollectionService:AddTag(swirl, "IslandPortal")
+	local b = Deco.Builder(model, cf, 1)
+	for _, side in ipairs({ -1, 1 }) do
+		b:Box(Vector3.new(4, 1.4, 4), PAL.Stone[1], side * 21, 0.7, 3)
+		b:Box(Vector3.new(1.4, 2, 1.4), RANK_GOLD, side * 21, 2.4, 3)
+		b:Box(Vector3.new(3, 2.2, 3), RANK_GOLD, side * 21, 4.5, 3)
+		b:Box(Vector3.new(0.6, 1.2, 0.6), RANK_DARK, side * 21 + 1.8, 4.6, 3)
+		b:Box(Vector3.new(0.6, 1.2, 0.6), RANK_DARK, side * 21 - 1.8, 4.6, 3)
+		b:Box(Vector3.new(1, 1, 1), C(255, 250, 200), side * 21, 6.2, 3, 0, math.pi / 4, 0, GLOW)
+	end
 	ctx:Reserve(P.X, P.Z, 34)
 end
 
@@ -1672,6 +1701,7 @@ function Isle.Build(ctx)
 	civic(ctx)
 	arenaPortal(ctx)
 	meadowsPortal(ctx)
+	rankPortal(ctx)
 	windmill(ctx)
 	lighthouse(ctx)
 	pondPark(ctx)

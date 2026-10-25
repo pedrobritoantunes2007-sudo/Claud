@@ -4,12 +4,17 @@
 --   📖 ÍNDICE: todas as espécies de DogData.Order por raridade. Descobertas aparecem coloridas com nome e
 --            Special; as outras ficam "???" em silhueta. Contador "X/N descobertos".
 -- Desempenho: só UM visualizador 3D (o grande do detalhe), reaproveitado nas duas abas.
+-- (2026-10-25) ✨ SHINY / 🥇 GOLD / 🌈 RAINBOW aparecem pintados nos cards e no palco (Shared/Variants), com selo e
+-- borda brilhando; botão 🧬 EVOLVE no detalhe (3 iguais → 1 GOLD, 3 GOLD → 1 RAINBOW: Services/EvolveService); o
+-- 📖 ÍNDICE mostra os 📖 prêmios do Dex no topo (Shared/DexRewards) e o exclusivo do 🎟️ Passe de Temporada.
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local Islands = require(ReplicatedStorage.Shared.Islands)
 local DogData = require(ReplicatedStorage.Shared.DogData)
+local Variants = require(ReplicatedStorage.Shared.Variants)
+local DexRewards = require(ReplicatedStorage.Shared.DexRewards)
 local Kit = require(script.Parent.Kit)
 local Icons = require(script.Parent.Icons)
 local Net = require(script.Parent.Parent.Net)
@@ -520,9 +525,12 @@ function DogsMenu.Start(HUD)
 	local equipButton = Kit.Button(mineInfo, {
 		Name = "TutEquip",
 		Position = UDim2.fromScale(0.04, 0.8),
-		Size = UDim2.fromScale(Config.HOUSES and 0.27 or 0.49, 0.18),
+		Size = UDim2.fromScale(Config.HOUSES and 0.27 or 0.25, 0.18),
 		Text = "EQUIP",
 	}, C.Green)
+	-- 🧬 EVOLVE (2026-10-25): no lugar do TIME (que só existe com casinha)
+	local evolveButton = Kit.Button(mineInfo, { Name = "Evolve", Position = UDim2.fromScale(0.3, 0.8), Size = UDim2.fromScale(0.23, 0.18), Text = "🧬 EVOLVE" }, C.Purple)
+	evolveButton.Visible = not Config.HOUSES
 	local teamButton = Kit.Button(mineInfo, { Name = "TutTeam", Position = UDim2.fromScale(0.33, 0.8), Size = UDim2.fromScale(0.2, 0.18), Text = "💵 TEAM" }, C.Cash)
 	teamButton.Visible = Config.HOUSES
 	local favButton = Kit.Button(mineInfo, { Position = UDim2.fromScale(0.55, 0.8), Size = UDim2.fromScale(0.12, 0.18), Text = "☆" }, C.Gold)
@@ -599,6 +607,7 @@ function DogsMenu.Start(HUD)
 
 	---------------------------------------------------------- estado
 	local selected = nil -- id do cachorro (aba MEUS)
+	local confirmEvolve = false
 	local dexSelected = nil -- id da espécie (aba ÍNDICE)
 	local confirmRelease = false
 	local cards = {} -- [dogId] = { Select, Recover }
@@ -612,14 +621,16 @@ function DogsMenu.Start(HUD)
 		return eq and Net.Power(eq) or nil
 	end
 
-	-- palco 3D: espécie, cor da raridade e silhueta
-	local function setStage(speciesId, silhouette)
+	-- palco 3D: espécie, cor da raridade e silhueta · variant = o cachorro do perfil (✨🥇🌈) · acc = acessórios
+	local function setStage(speciesId, silhouette, variant, acc)
 		local species = DogData.Species[speciesId]
 		local rarity = Kit.Rarity(species.Rarity)
-		local changed = view.SpeciesId ~= speciesId
+		local special = variant and Variants.IsSpecial(variant) and variant or nil
+		local key = speciesId .. "|" .. Variants.Label(special, true) .. "|" .. (acc and table.concat({ acc.Hat or "", acc.Collar or "", acc.Glasses or "", acc.Cape or "" }, ",") or "")
+		local changed = view.SpeciesId ~= key
 		if changed then
-			view.SpeciesId = speciesId
-			view.SetSpecies(speciesId)
+			view.SpeciesId = key
+			view.SetSpecies(speciesId, nil, special, acc)
 			if stageStroke then
 				stageStroke:Destroy()
 			end
@@ -627,8 +638,8 @@ function DogsMenu.Start(HUD)
 		end
 		view.Frame.ImageColor3 = silhouette and Color3.new(0, 0, 0) or Color3.new(1, 1, 1)
 		stage.BackgroundColor3 = silhouette and Color3.fromRGB(70, 64, 92) or rarity.Color:Lerp(C.Panel2, 0.45)
-		Kit.SetButtonColor(rarityChip, rarity.Color:Lerp(C.Dark, 0.2))
-		rarityChipText.Text = rarity.Label
+		Kit.SetButtonColor(rarityChip, (special and Variants.Color(special) or rarity.Color):Lerp(C.Dark, 0.2))
+		rarityChipText.Text = special and (rarity.Label .. " · " .. Variants.Label(special, true)) or rarity.Label
 		-- 🆚 elementos (ícones desenhados): os do cachorro e contra quais ele é forte (verde) / fraco (vermelho)
 		local mine, strong, weak = {}, {}, {}
 		if not silhouette then
@@ -683,8 +694,9 @@ function DogsMenu.Start(HUD)
 			return
 		end
 		local species = DogData.Species[dog.Species]
-		local st = Config.Stats(species, dog.Level)
-		if setStage(dog.Species, false) then
+		local st = Config.Stats(species, dog.Level, dog)
+		local accOn = p.Equipped == dog.Id and type(p.Acc) == "table" and p.Acc.On or nil
+		if setStage(dog.Species, false, dog, accOn) then
 			fresh = true
 		end
 		if fresh then
@@ -742,6 +754,17 @@ function DogsMenu.Start(HUD)
 		confirmRelease = false
 		releaseButton.Text = "🕊️"
 		Kit.SetButtonColor(releaseButton, C.Red)
+		-- 🧬 quantos iguais (mesma espécie e versão) tem para evoluir
+		confirmEvolve = false
+		if Variants.CanEvolve(dog) then
+			local list, have = Variants.EvolvePick(p.Dogs, dog.Id, nil)
+			local next = Variants.TIERS[Variants.TierOf(dog) + 1]
+			evolveButton.Text = "🧬 " .. next.Label .. " " .. math.min(have, Variants.EVOLVE_COUNT) .. "/" .. Variants.EVOLVE_COUNT
+			Kit.SetButtonColor(evolveButton, list and (Variants.TierOf(dog) == 0 and C.Gold or C.Purple) or C.Disabled)
+		else
+			evolveButton.Text = "🌈 MAX"
+			Kit.SetButtonColor(evolveButton, C.Disabled)
+		end
 	end
 
 	local function sortedDogs()
@@ -838,16 +861,23 @@ function DogsMenu.Start(HUD)
 		if border then
 			border:Destroy()
 		end
-		Kit.RarityStroke(card, species.Rarity, 3)
+		local special = Variants.IsSpecial(dog)
+		if special then
+			-- ✨🥇🌈 borda brilhando na cor da versão
+			local stroke = Kit.Stroke(card, Color3.new(1, 1, 1), 4)
+			Kit.Shimmer(stroke, Variants.TierOf(dog) == 2 and Kit.RAINBOW or Variants.TierOf(dog) == 1 and Kit.GOLDEN or { Variants.SHINY_COLOR, Color3.new(1, 1, 1), Variants.SHINY_COLOR })
+		else
+			Kit.RarityStroke(card, species.Rarity, 3)
+		end
 		local ring = selectionRing(card, dog.Id == selected)
-		rarityBand(card, species.Rarity, rarity.Label)
+		rarityBand(card, species.Rarity, special and (rarity.Label .. " · " .. Variants.Label(dog, true)) or rarity.Label)
 
-		-- imagem do cachorro (retrato 3D parado)
+		-- imagem do cachorro (retrato 3D parado, pintado se for shiny/gold/rainbow)
 		Kit.DogPortrait(card, {
 			Position = UDim2.fromScale(0.04, 0.15),
 			Size = UDim2.fromScale(0.92, 0.38),
 			ZIndex = 2,
-		}, dog.Species)
+		}, dog.Species, special and dog or nil)
 
 		Kit.Text(card, {
 			Position = UDim2.fromScale(0.06, 0.53),
@@ -968,7 +998,7 @@ function DogsMenu.Start(HUD)
 		-- só reconstrói se algo visível mudou (o perfil chega várias vezes por segundo enquanto come)
 		local parts = { tostring(p.Equipped), tostring(onlyFav), rarityFilter, sortIndex }
 		for _, dog in ipairs(dogs) do
-			table.insert(parts, dog.Id .. ":" .. dog.Level .. ":" .. dog.Name .. ":" .. tostring(dog.Fav) .. ":" .. starsOf(dog))
+			table.insert(parts, dog.Id .. ":" .. dog.Level .. ":" .. dog.Name .. ":" .. tostring(dog.Fav) .. ":" .. starsOf(dog) .. ":" .. Variants.Label(dog, true))
 		end
 		local signature = table.concat(parts, "|")
 		if not force and signature == lastSignature then
@@ -1051,7 +1081,9 @@ function DogsMenu.Start(HUD)
 			showStatus("🔒 NOT DISCOVERED", C.Disabled)
 		end
 		Kit.RarityText(dexSub, species.Rarity)
-		if Config.EGGS then
+		if species.Exclusive then
+			dexEggsText.Text = "🎟️ EXCLUSIVE: only in the SEASON PASS (premium track, level 30)"
+		elseif Config.EGGS then
 			dexEggsText.Text = "🥚 Found in: " .. eggsFor(species.Rarity)
 		else
 			local where = wildFor(dexSelected)
@@ -1140,6 +1172,39 @@ function DogsMenu.Start(HUD)
 			end
 		end
 		table.clear(dexCells)
+		-- 📖 PRÊMIOS DO DEX (2026-10-25): os marcos (10/25/50 descobertos e cada raridade completa) com a barra de cada um
+		local rewards = make("Frame", { LayoutOrder = 0, Size = UDim2.fromScale(1, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1 }, dexHolder)
+		make("UIListLayout", { Padding = UDim.new(0, 6), SortOrder = Enum.SortOrder.LayoutOrder }, rewards)
+		Kit.Text(rewards, {
+			LayoutOrder = 1,
+			Size = UDim2.new(1, 0, 0, 30),
+			Text = "🎁 DEX REWARDS — leashes, spins, Cash and titles!",
+			TextColor3 = C.Gold,
+			TextXAlignment = Enum.TextXAlignment.Left,
+		})
+		local rgrid = make("Frame", { LayoutOrder = 2, Size = UDim2.fromScale(1, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1 }, rewards)
+		make("UIGridLayout", { CellSize = UDim2.new(0.317, 0, 0, 74), CellPadding = UDim2.new(0.024, 0, 0, 8), SortOrder = Enum.SortOrder.LayoutOrder }, rgrid)
+		for i, m in ipairs(DexRewards.MILESTONES) do
+			local have, goal, done = DexRewards.Progress(m, found)
+			if goal > 0 then
+				local box = Kit.Box(rgrid, { LayoutOrder = i }, done and Color3.fromRGB(46, 120, 70) or C.Panel2)
+				Kit.Text(box, {
+					Position = UDim2.fromScale(0.05, 0.04),
+					Size = UDim2.fromScale(0.9, 0.3),
+					Text = (done and "✔ " or "") .. m.Name,
+					TextColor3 = done and C.Green or C.Text,
+				})
+				local bar = Kit.Bar(box, { Position = UDim2.fromScale(0.05, 0.38), Size = UDim2.fromScale(0.9, 0.24) }, done and C.Green or C.Gold)
+				bar.Set(goal > 0 and have / goal or 0)
+				bar.Label.Text = have .. "/" .. goal
+				Kit.Text(box, {
+					Position = UDim2.fromScale(0.05, 0.66),
+					Size = UDim2.fromScale(0.9, 0.28),
+					Text = DexRewards.RewardText(m.Reward) .. (m.Title and (" · 🎖️ " .. m.Title) or ""),
+					TextColor3 = C.Muted,
+				})
+			end
+		end
 		local firstId = nil
 		for gi, rarityId in ipairs(Config.RARITIES) do
 			local ids = groups[rarityId]
@@ -1384,7 +1449,7 @@ function DogsMenu.Start(HUD)
 		if not confirmRelease then
 			confirmRelease = true
 			local rarity = Config.RARITY[DogData.Species[dog.Species].Rarity]
-			releaseButton.Text = "+$" .. Config.Format(math.floor(rarity.Release * (1 + dog.Level * 0.05))) .. "?"
+			releaseButton.Text = "+$" .. Config.Format(math.floor(rarity.Release * (1 + dog.Level * 0.05) * Variants.ValueMult(dog))) .. "?"
 			Kit.SetButtonColor(releaseButton, C.Orange)
 			local id = dog.Id
 			task.delay(3, function()
@@ -1400,6 +1465,49 @@ function DogsMenu.Start(HUD)
 		HUD.Toast(message, ok and "green" or "red")
 		if ok then
 			selected = nil
+		end
+	end)
+
+	-- 🧬 EVOLVE: 1º toque mostra o que vai acontecer, 2º toque confirma (some com os 3 e nasce 1 da versão de cima)
+	evolveButton.Activated:Connect(function()
+		local p = Net.Profile
+		local dog = p and selected and p.Dogs[selected]
+		if not (dog and Variants.CanEvolve(dog)) then
+			return
+		end
+		local list, have = Variants.EvolvePick(p.Dogs, dog.Id, nil)
+		local nextTier = Variants.TIERS[Variants.TierOf(dog) + 1]
+		if not list then
+			HUD.Toast("🧬 You need " .. Variants.EVOLVE_COUNT .. " " .. (Variants.TierOf(dog) == 1 and "GOLD " or "") .. DogData.Species[dog.Species].Name .. " (you have " .. have .. "). Catch more! ⭐ Favorites are kept safe.", "orange")
+			Kit.Shake(evolveButton)
+			return
+		end
+		if not confirmEvolve then
+			confirmEvolve = true
+			evolveButton.Text = "3 → 1 " .. nextTier.Label .. "?"
+			Kit.SetButtonColor(evolveButton, C.Orange)
+			local id = dog.Id
+			task.delay(3, function()
+				if confirmEvolve and selected == id then
+					showDetail(false)
+				end
+			end)
+			return
+		end
+		confirmEvolve = false
+		local ok, result = Net.Invoke("EvolveAction", "evolve", dog.Id)
+		if ok and type(result) == "table" then
+			selected = result.Uid
+			HUD.Banner("🧬 EVOLVED!", (result.Shiny and "✨ " or "") .. result.Label .. " " .. tostring(result.Name), "x" .. tostring(nextTier.Mult) .. " HP and Attack!", nextTier.Color, 3)
+			Kit.Burst(stage, UDim2.fromScale(0.5, 0.55), nextTier.Color, 24, { "★", "✦" }, 140)
+			lastSignature = nil
+			task.delay(0.4, function()
+				rebuildMine(true)
+				showDetail(true)
+			end)
+		else
+			HUD.Toast(type(result) == "string" and result or "Couldn't evolve right now.", "red")
+			Kit.Shake(evolveButton)
 		end
 	end)
 

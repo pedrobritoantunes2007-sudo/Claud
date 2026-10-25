@@ -15,6 +15,7 @@ local RunService = game:GetService("RunService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local DogData = require(ReplicatedStorage.Shared.DogData)
 local Monetization = require(ReplicatedStorage.Shared.Monetization)
+local SeasonPass = require(ReplicatedStorage.Shared.SeasonPass)
 local UI = script.Parent.Parent:WaitForChild("UI")
 local Kit = require(UI:WaitForChild("Kit"))
 local Icons = require(UI:WaitForChild("Icons"))
@@ -38,6 +39,7 @@ local TABS = {
 	{ Id = "cash", Text = "CASH", Icon = "coins", Color = C.Green },
 	{ Id = "dogs", Text = "DOGS & SPINS", Icon = "dog", Color = C.Blue },
 	{ Id = "boosts", Text = "BOOSTS", Icon = "clock", Color = C.Orange },
+	{ Id = "style", Text = "STYLE", Icon = "hat", Color = C.Pink }, -- 🎩 acessórios especiais (2026-10-25)
 }
 local TAG_COLOR = { NEW = C.Red, POPULAR = C.Blue, ["BEST VALUE"] = C.Green, ["BEST ODDS"] = C.Purple, DIVINE = C.Orange }
 local BADGE_COLOR = C.Red
@@ -47,6 +49,16 @@ local realPrice = {} -- [key] = preço lido do site (se o Id já existe)
 local function owns(item)
 	if item.Type == "GamePass" then
 		return player:GetAttribute(Monetization.Attr(item.Key)) == true
+	end
+	-- 🎟️ Passe de Temporada: premium DESTA temporada · 🎩 acessório especial: já é seu (2026-10-25)
+	local profile = Net.Profile
+	local r = item.Recompensa or {}
+	if r.Temporada then
+		local s = profile and profile.Season
+		return type(s) == "table" and s.Id == SeasonPass.Current() and s.Premium == true
+	end
+	if r.Acessorio then
+		return profile ~= nil and type(profile.Acc) == "table" and type(profile.Acc.Owned) == "table" and profile.Acc.Owned[r.Acessorio] == true
 	end
 	if item.UmaVez then
 		local p = Net.Profile
@@ -537,6 +549,16 @@ function StoreMenu.Start(HUD)
 	for _, item in ipairs(Monetization.Items) do
 		if item.Tab == "dogs" then
 			card(dogGrid, item, 236)
+		end
+	end
+
+	---------------------------------------------------------- 🎩 STYLE (acessórios especiais por Robux)
+	local stylePage = newPage("style")
+	note(stylePage, 1, "Special accessories for your dog: everyone sees them! More (for Cash) in 🎩 STYLE.")
+	local styleGrid = grid(stylePage, 2, 2, 226)
+	for _, item in ipairs(Monetization.Items) do
+		if item.Tab == "style" then
+			card(styleGrid, item, 226)
 		end
 	end
 

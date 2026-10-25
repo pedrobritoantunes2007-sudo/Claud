@@ -12,6 +12,7 @@ local Config = require(ReplicatedStorage.Shared.Config)
 local Islands = require(ReplicatedStorage.Shared.Islands)
 local Layout = require(ReplicatedStorage.Shared.Layout)
 local Village = require(ReplicatedStorage.Shared.Village)
+local RankIsland = require(ReplicatedStorage.Shared.RankIsland)
 local DataService = require(script.Parent.DataService)
 local DogService = require(script.Parent.DogService)
 local Fighters = require(script.Parent.Fighters)
@@ -29,7 +30,7 @@ local lavaToast = {}
 local outside = {} -- [player] = os.clock() desde quando está numa ilha fechada
 
 function IslandService.IsOpen(player, id)
-	if id == "common" or id == "main" or id == "colosseum" or id == Village.Id then
+	if id == "common" or id == "main" or id == "colosseum" or id == Village.Id or id == RankIsland.Id then
 		return true
 	end
 	local data = DataService.Get(player)
@@ -51,7 +52,7 @@ local function ready(id)
 	return model ~= nil and model:GetAttribute("Ready") == true
 end
 local function building(id)
-	local name = id == Village.Id and Village.Name or Islands.List[id].Name
+	local name = id == Village.Id and Village.Name or id == RankIsland.Id and RankIsland.Name or Islands.List[id].Name
 	return "🏗️ " .. name .. " is still being built... try again in a few seconds!"
 end
 
@@ -91,6 +92,9 @@ function IslandService.ArrivalPos(id)
 	elseif id == Village.Id then
 		local sp = Village.SPAWN
 		return groundAt(Village.ToWorld(sp.X, Village.GROUND_Y + 4, sp.Z))
+	elseif id == RankIsland.Id then
+		local sp = RankIsland.SPAWN
+		return groundAt(RankIsland.ToWorld(sp.X, RankIsland.GROUND_Y + 4, sp.Z))
 	end
 	return groundAt(Islands.ArrivalPoint(id) + Vector3.new(0, 4, 0))
 end
@@ -100,7 +104,7 @@ local function plazaFront(id)
 end
 
 function IslandService.Travel(player, id)
-	if id ~= "main" and id ~= "colosseum" and id ~= Village.Id and not Islands.List[id] then
+	if id ~= "main" and id ~= "colosseum" and id ~= Village.Id and id ~= RankIsland.Id and not Islands.List[id] then
 		return false, "Unknown island."
 	end
 	if player:GetAttribute("InTower") then
@@ -118,6 +122,7 @@ function IslandService.Travel(player, id)
 	local name = id == "main" and "the Main Island"
 		or id == "colosseum" and "the ⚔️ Colosseum"
 		or id == Village.Id and Village.Emoji .. " " .. Village.Name
+		or id == RankIsland.Id and RankIsland.Emoji .. " the " .. RankIsland.Name
 		or Islands.EMOJI[id] .. " " .. Islands.List[id].Name
 	return true, "Welcome to " .. name .. "!"
 end
@@ -179,6 +184,19 @@ local function usePortal(player, portal)
 		elseif teleport(player, IslandService.ArrivalPos("main")) and portal.From == Village.Id then
 			-- 🌀 portal da ⚔️ ARENA da Pawville (a vila fica longe de tudo, sem ponte)
 			remotes.Notify:FireClient(player, "⚔️ Welcome to the Arena! The portals to the islands are all around the Colosseum.", "gold")
+		end
+		return
+	end
+	if portal.To == RankIsland.Id then
+		-- 🏆 portal da Ilha do Ranking (Pawville e Praça dos Portais)
+		if not ready(RankIsland.Id) then
+			local now = os.clock()
+			if now - (lockedToast[player] or 0) > 3 then
+				lockedToast[player] = now
+				remotes.Notify:FireClient(player, building(RankIsland.Id), "gold")
+			end
+		elseif teleport(player, IslandService.ArrivalPos(RankIsland.Id)) then
+			remotes.Notify:FireClient(player, "🏆 Welcome to the Ranking Island! See the best players, clans and Season Pass levels.", "gold")
 		end
 		return
 	end
@@ -244,9 +262,25 @@ local function watch(player, now)
 	-- (a vila conta só pelo mapa de cima: cachorro afundando no mar dela continua "na vila" e renasce lá, não na ilha
 	-- principal — 2026-10-23, "estou nascendo na ilha errada")
 	local flatPos = Vector3.new(pos.X, Village.Center.Y + Village.GROUND_Y, pos.Z)
-	local where = island or (Layout.InArena(pos) and "colosseum") or (Village.Inside(flatPos, 40) and Village.Id) or "main"
+	local where = island
+		or (Layout.InArena(pos) and "colosseum")
+		or (Village.Inside(flatPos, 40) and Village.Id)
+		or (RankIsland.Inside(Vector3.new(pos.X, RankIsland.GROUND_Y, pos.Z), 40) and RankIsland.Id)
+		or "main"
 	if player:GetAttribute("Island") ~= where then
 		player:SetAttribute("Island", where)
+	end
+	-- 🌊 rede de segurança (2026-10-25, "para ninguém cair no limbo"): afundou abaixo do chão invisível do mar ou passou
+	-- das paredes invisíveis da beira do mundo (Layout.WORLD) → volta para a terra (a ilha onde estava, se aberta)
+	if pos.Y < Layout.WORLD.RescueY or not Layout.InWorld(pos, -40) then
+		local back = (island and IslandService.IsOpen(player, island) and island)
+			or ((where == Village.Id or where == RankIsland.Id) and where)
+			or "main"
+		cooldown[player] = 0
+		if teleport(player, IslandService.ArrivalPos(back)) then
+			remotes.Notify:FireClient(player, "🌊 Whoa, too far! Back to dry land!", "gold")
+		end
+		return
 	end
 	-- chegou numa ilha que ainda não abriu (nadando/voando): volta para a praça
 	if island and not IslandService.IsOpen(player, island) then
