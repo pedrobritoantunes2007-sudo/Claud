@@ -441,25 +441,25 @@ try {
     try {
         # (2026-10-25, pedido do dono: descricao nova em ingles, com as novidades) texto da pagina do jogo (ingles, ate 1000 letras)
         $desc = @(
-            'NEW UPDATE: Ranking Island, SHINY dogs, EVOLVE, Clans, Season Pass and Weekend Events!',
+            '🔥 NEW UPDATE: 🏆 Ranking Island, ✨ SHINY dogs, 🧬 EVOLVE, 🚩 Clans, 🎟️ Season Pass and 🎉 Weekend Events!',
             '',
-            'Be a dog and FIGHT! Get your first pup in Pawville, battle wild dogs, weaken them and throw a LEASH to catch them.',
+            '🐶 Be a dog and FIGHT! Get your first pup in Pawville, battle wild dogs, weaken them and throw a 🦮 LEASH to catch them.',
             '',
-            'FEATURES',
-            '- Catch 80+ dogs: Common to Mythic, Halloween and Divine',
-            '- 1 in 500 wild dogs is SHINY: catch it before anyone else!',
-            '- EVOLVE: 3 equal dogs = 1 GOLD, 3 GOLD = 1 RAINBOW',
-            '- Aim your powers, dash and combo: every dog has its own skills',
-            '- Winged dogs really FLY between the islands',
-            '- Beat each island champion to open the next one',
-            '- Hats, collars, glasses and capes for your dog',
-            '- Create a CLAN with friends and climb the weekly ranking',
-            '- Season Pass with an EXCLUSIVE dog at level 30',
-            '- Weekend events: 2x Catch, 2x Cash and Rare Dog Rain',
-            '- PvP in the Colosseum and a Super Boss for everyone',
-            '- Safe trades with friends and the Ranking Island leaderboards',
+            '⭐ FEATURES ⭐',
+            '🐾 Catch 80+ dogs: Common to Mythic, Halloween and Divine',
+            '✨ 1 in 500 wild dogs is SHINY: catch it before anyone else!',
+            '🌈 EVOLVE: 3 equal dogs = 1 GOLD, 3 GOLD = 1 RAINBOW',
+            '⚡ Aim your powers, dash and combo: every dog has its own skills',
+            '🪽 Winged dogs really FLY between the islands',
+            '🏝️ Beat each island champion to open the next one',
+            '🎩 Hats, collars, glasses and capes for your dog',
+            '🚩 Create a CLAN with friends and climb the weekly ranking',
+            '🎟️ Season Pass with an EXCLUSIVE dog at level 30',
+            '🎉 Weekend events: 2x Catch, 2x Cash and Rare Dog Rain',
+            '⚔️ PvP in the Colosseum and a 👹 Super Boss for everyone',
+            '🤝 Safe trades with friends and 🏆 Ranking Island leaderboards',
             '',
-            'Like the game and add it to your favorites to get every new update!'
+            '👍 Like the game and ⭐ add it to your favorites to get every new update!'
         ) -join "`n"
         SendJson 'PATCH' "$api/cloud/v2/universes/$($cfg.UniverseId)?updateMask=description" @{ description = $desc } 'Descricao' | Out-Null
         Say '   OK descricao do jogo' 'Green'
