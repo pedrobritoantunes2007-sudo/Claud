@@ -1,0 +1,128 @@
+{
+ "w": 1920,
+ "h": 1080,
+ "design": 1280,
+ "islands": [
+  "isl_main.json",
+  "isl_cloud.json",
+  "isl_epic.json",
+  "isl_legendary.json"
+ ],
+ "sky": [
+  "#3f9dff",
+  "#d6f0ff"
+ ],
+ "fog": {
+  "color": "#cfeaff",
+  "near": 2500,
+  "far": 8000
+ },
+ "dogs": [
+  {
+   "file": "p_frost_phoenix.json",
+   "pose": "voo",
+   "pos": [
+    -431.2290681598302,
+    0,
+    -794.0698808738875
+   ],
+   "y": 994.1471147139011,
+   "yaw": -147.91125214642693,
+   "roll": -14,
+   "pitch": 8,
+   "scale": 1.55
+  },
+  {
+   "file": "p_dragon_hound.json",
+   "pose": "voo",
+   "pos": [
+    -323.5989698455377,
+    0,
+    -859.2884937136214
+   ],
+   "y": 981.8469327592867,
+   "yaw": 8.54444382632226,
+   "roll": 18,
+   "scale": 2.4
+  }
+ ],
+ "camera": {
+  "pos": [
+   -440,
+   1010,
+   -760
+  ],
+  "target": [
+   80,
+   770,
+   -1520
+  ],
+  "fov": 50
+ },
+ "shadowCenter": [
+  60,
+  700,
+  -1430
+ ],
+ "shadowR": 500,
+ "clouds": [
+  {
+   "at": [
+    -760,
+    840,
+    -1500
+   ],
+   "s": 40
+  },
+  {
+   "at": [
+    700,
+    860,
+    -2100
+   ],
+   "s": 55
+  },
+  {
+   "at": [
+    -950,
+    700,
+    -1050
+   ],
+   "s": 35
+  },
+  {
+   "at": [
+    420,
+    980,
+    -1100
+   ],
+   "s": 30
+  }
+ ],
+ "overlay": [
+  {
+   "type": "text",
+   "x": 640,
+   "y": 72,
+   "size": 92,
+   "text": "FLY TO 8 ISLANDS!",
+   "fill": [
+    "#ffe066",
+    "#ffb21f"
+   ]
+  },
+  {
+   "type": "pill",
+   "x": 640,
+   "y": 152,
+   "w": 540,
+   "h": 54,
+   "fill": [
+    "#3fa7ff",
+    "#1f6fd6"
+   ],
+   "text": "WINGED DOGS REALLY FLY",
+   "textSize": 35
+  }
+ ]
+}

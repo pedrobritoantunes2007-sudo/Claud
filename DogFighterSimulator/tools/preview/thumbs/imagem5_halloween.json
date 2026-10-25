@@ -1,0 +1,183 @@
+{
+ "w": 1920,
+ "h": 1080,
+ "design": 1280,
+ "islands": [
+  "isl_common.json"
+ ],
+ "sky": [
+  "#140a33",
+  "#6a2f86"
+ ],
+ "hemi": 0.75,
+ "hemiSky": "#8e7bff",
+ "hemiGround": "#2a1840",
+ "sunColor": "#b9c4ff",
+ "sunPower": 1.5,
+ "sunDir": [
+  0.5,
+  0.6,
+  0.6
+ ],
+ "exposure": 1.1,
+ "dogs": [
+  {
+   "file": "p_clown_dog.json",
+   "pose": "animado",
+   "pos": [
+    -174,
+    0,
+    2214
+   ],
+   "yaw": 205,
+   "scale": 3.3
+  },
+  {
+   "file": "p_clown_dog.json",
+   "pose": "mordida",
+   "pos": [
+    -188,
+    0,
+    2207
+   ],
+   "yaw": 222,
+   "scale": 2.9,
+   "opacity": 0.62,
+   "outlineColor": "#be6eff",
+   "tint": "#b46eff",
+   "tintAmount": 0.25
+  },
+  {
+   "file": "p_clown_dog.json",
+   "pose": "galope2",
+   "pos": [
+    -160,
+    0,
+    2205
+   ],
+   "yaw": 190,
+   "scale": 2.9,
+   "opacity": 0.62,
+   "outlineColor": "#be6eff",
+   "tint": "#b46eff",
+   "tintAmount": 0.25,
+   "lift": 1
+  }
+ ],
+ "lights": [
+  {
+   "pos": [
+    -182,
+    13,
+    2196
+   ],
+   "color": "#ff7a1a",
+   "power": 260,
+   "dist": 40
+  },
+  {
+   "pos": [
+    -166,
+    13,
+    2192
+   ],
+   "color": "#ff7a1a",
+   "power": 260,
+   "dist": 40
+  },
+  {
+   "pos": [
+    -174,
+    25,
+    2226
+   ],
+   "color": "#c48bff",
+   "power": 180,
+   "dist": 40
+  },
+  {
+   "pos": [
+    -172,
+    24,
+    2236
+   ],
+   "color": "#ffd9a8",
+   "power": 420,
+   "dist": 60
+  }
+ ],
+ "camera": {
+  "pos": [
+   -170,
+   18.5,
+   2250
+  ],
+  "target": [
+   -175,
+   17,
+   2208
+  ],
+  "fov": 46
+ },
+ "shadowCenter": [
+  -174,
+  9,
+  2210
+ ],
+ "shadowR": 60,
+ "overlay": [
+  {
+   "type": "moon",
+   "x": 1090,
+   "y": 120,
+   "r": 62
+  },
+  {
+   "type": "bat",
+   "x": 1060,
+   "y": 112,
+   "s": 0.8,
+   "rot": -8
+  },
+  {
+   "type": "bat",
+   "x": 1185,
+   "y": 215,
+   "s": 0.6,
+   "rot": 12
+  },
+  {
+   "type": "bat",
+   "x": 905,
+   "y": 150,
+   "s": 0.5,
+   "rot": 4
+  },
+  {
+   "type": "text",
+   "x": 330,
+   "y": 82,
+   "size": 82,
+   "text": "HALLOWEEN!",
+   "fill": [
+    "#ffb347",
+    "#ff7a1a"
+   ],
+   "rot": -4
+  },
+  {
+   "type": "pill",
+   "x": 330,
+   "y": 162,
+   "w": 470,
+   "h": 56,
+   "fill": [
+    "#a66bff",
+    "#6f3bd6"
+   ],
+   "text": "SPOOKY CLOWN + 2 CLONES",
+   "textSize": 34,
+   "rot": -4
+  }
+ ]
+}

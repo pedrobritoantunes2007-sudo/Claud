@@ -1,0 +1,82 @@
+{
+ "w": 512,
+ "h": 512,
+ "design": 512,
+ "studio": true,
+ "hemi": 1.55,
+ "sunPower": 2.6,
+ "sunDir": [
+  -0.5,
+  0.7,
+  0.6
+ ],
+ "dogs": [
+  {
+   "file": "p_dragon_hound.json",
+   "pose": "mordida",
+   "pos": [
+    0,
+    0,
+    0
+   ],
+   "y": 0,
+   "yaw": 215,
+   "scale": 1,
+   "outline": 0.06
+  }
+ ],
+ "camera": {
+  "fov": 34,
+  "focus": {
+   "dog": 0,
+   "part": "Head1",
+   "dist": 9,
+   "around": 30,
+   "height": 1.2,
+   "targetOffset": [
+    0,
+    -1.2,
+    0
+   ]
+  }
+ },
+ "shadowCenter": [
+  0,
+  0,
+  0
+ ],
+ "shadowR": 10,
+ "under": [
+  {
+   "type": "gradient",
+   "radial": true,
+   "top": "#c08bff",
+   "bottom": "#3a1d8a",
+   "cx": 256,
+   "cy": 220,
+   "r": 380
+  },
+  {
+   "type": "rays",
+   "x": 256,
+   "y": 220,
+   "r": 520,
+   "count": 16,
+   "color": "#ffffff",
+   "alpha": 0.18
+  }
+ ],
+ "overlay": [
+  {
+   "type": "text",
+   "x": 256,
+   "y": 448,
+   "size": 70,
+   "text": "DOG FIGHTER",
+   "fill": [
+    "#ffe066",
+    "#ffb21f"
+   ]
+  }
+ ]
+}

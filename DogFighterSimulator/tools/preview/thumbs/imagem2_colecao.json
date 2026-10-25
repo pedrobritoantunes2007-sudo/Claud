@@ -1,0 +1,405 @@
+{
+ "w": 1920,
+ "h": 1080,
+ "design": 1280,
+ "studio": true,
+ "hemi": 1.5,
+ "sunPower": 2.4,
+ "sunDir": [
+  -0.3,
+  0.8,
+  0.55
+ ],
+ "camera": {
+  "pos": [
+   0,
+   20,
+   82
+  ],
+  "target": [
+   0,
+   14.5,
+   0
+  ],
+  "fov": 44
+ },
+ "shadowCenter": [
+  0,
+  0,
+  0
+ ],
+ "shadowR": 90,
+ "under": [
+  {
+   "type": "gradient",
+   "radial": true,
+   "top": "#9b7bff",
+   "bottom": "#2b1d6e",
+   "cy": 430,
+   "r": 900
+  },
+  {
+   "type": "rays",
+   "x": 640,
+   "y": 430,
+   "r": 1400,
+   "count": 18,
+   "color": "#ffffff",
+   "alpha": 0.08
+  }
+ ],
+ "floors": [
+  {
+   "round": true,
+   "r": 5.8,
+   "h": 1.2,
+   "pos": [
+    -50,
+    1.2,
+    -0.0
+   ],
+   "color": "#bebec3",
+   "ink": 0.4
+  },
+  {
+   "round": true,
+   "r": 5.8,
+   "h": 2.575,
+   "pos": [
+    -37.5,
+    2.575,
+    -3.0
+   ],
+   "color": "#46a0ff",
+   "ink": 0.4
+  },
+  {
+   "round": true,
+   "r": 5.8,
+   "h": 3.95,
+   "pos": [
+    -25,
+    3.95,
+    -6.0
+   ],
+   "color": "#b45aff",
+   "ink": 0.4
+  },
+  {
+   "round": true,
+   "r": 5.8,
+   "h": 5.325,
+   "pos": [
+    -12.5,
+    5.325,
+    -9.0
+   ],
+   "color": "#ff3c6e",
+   "ink": 0.4
+  },
+  {
+   "round": true,
+   "r": 5.8,
+   "h": 6.7,
+   "pos": [
+    0,
+    6.7,
+    -12.0
+   ],
+   "color": "#ff8c28",
+   "ink": 0.4
+  },
+  {
+   "round": true,
+   "r": 5.8,
+   "h": 5.325,
+   "pos": [
+    12.5,
+    5.325,
+    -9.0
+   ],
+   "color": "#ffc828",
+   "ink": 0.4
+  },
+  {
+   "round": true,
+   "r": 5.8,
+   "h": 3.95,
+   "pos": [
+    25,
+    3.95,
+    -6.0
+   ],
+   "color": "#ff7814",
+   "ink": 0.4
+  },
+  {
+   "round": true,
+   "r": 5.8,
+   "h": 2.575,
+   "pos": [
+    37.5,
+    2.575,
+    -3.0
+   ],
+   "color": "#5adc6e",
+   "ink": 0.4
+  },
+  {
+   "round": true,
+   "r": 5.8,
+   "h": 1.2,
+   "pos": [
+    50,
+    1.2,
+    -0.0
+   ],
+   "color": "#bebec3",
+   "ink": 0.4
+  }
+ ],
+ "dogs": [
+  {
+   "file": "p_caramelo.json",
+   "pose": "animado",
+   "pos": [
+    -50,
+    0,
+    -0.0
+   ],
+   "y": 1.2,
+   "yaw": 215,
+   "scale": 3.348
+  },
+  {
+   "file": "p_crystal_hound.json",
+   "pose": "animado",
+   "pos": [
+    -37.5,
+    0,
+    -3.0
+   ],
+   "y": 2.575,
+   "yaw": 215,
+   "scale": 3.024
+  },
+  {
+   "file": "p_samurai_shiba.json",
+   "pose": "animado",
+   "pos": [
+    -25,
+    0,
+    -6.0
+   ],
+   "y": 3.95,
+   "yaw": 215,
+   "scale": 3.024
+  },
+  {
+   "file": "p_phoenix_hound.json",
+   "pose": "parado",
+   "pos": [
+    -12.5,
+    0,
+    -9.0
+   ],
+   "y": 5.325,
+   "yaw": 215,
+   "scale": 2.376
+  },
+  {
+   "file": "p_sun_dragon.json",
+   "pose": "parado",
+   "pos": [
+    0,
+    0,
+    -12.0
+   ],
+   "y": 6.7,
+   "yaw": 205,
+   "scale": 1.944
+  },
+  {
+   "file": "p_dragon_hound.json",
+   "pose": "parado",
+   "pos": [
+    12.5,
+    0,
+    -9.0
+   ],
+   "y": 5.325,
+   "yaw": 145,
+   "scale": 2.538
+  },
+  {
+   "file": "p_clown_dog.json",
+   "pose": "animado",
+   "pos": [
+    25,
+    0,
+    -6.0
+   ],
+   "y": 3.95,
+   "yaw": 145,
+   "scale": 3.24
+  },
+  {
+   "file": "p_snow_husky.json",
+   "pose": "animado",
+   "pos": [
+    37.5,
+    0,
+    -3.0
+   ],
+   "y": 2.575,
+   "yaw": 145,
+   "scale": 3.024
+  },
+  {
+   "file": "p_corgi.json",
+   "pose": "animado",
+   "pos": [
+    50,
+    0,
+    -0.0
+   ],
+   "y": 1.2,
+   "yaw": 145,
+   "scale": 3.348
+  }
+ ],
+ "overlay": [
+  {
+   "type": "text",
+   "at3d": [
+    -50,
+    0.3,
+    6.0
+   ],
+   "dy": 20,
+   "size": 25,
+   "text": "COMMON",
+   "fill": "#bebec3"
+  },
+  {
+   "type": "text",
+   "at3d": [
+    -37.5,
+    0.3,
+    3.0
+   ],
+   "dy": 20,
+   "size": 25,
+   "text": "RARE",
+   "fill": "#46a0ff"
+  },
+  {
+   "type": "text",
+   "at3d": [
+    -25,
+    0.3,
+    0.0
+   ],
+   "dy": 20,
+   "size": 25,
+   "text": "EPIC",
+   "fill": "#b45aff"
+  },
+  {
+   "type": "text",
+   "at3d": [
+    -12.5,
+    0.3,
+    -3.0
+   ],
+   "dy": 20,
+   "size": 25,
+   "text": "MYTHIC",
+   "fill": "#ff3c6e"
+  },
+  {
+   "type": "text",
+   "at3d": [
+    0,
+    0.3,
+    -6.0
+   ],
+   "dy": 20,
+   "size": 25,
+   "text": "DIVINE",
+   "fill": "#ff8c28"
+  },
+  {
+   "type": "text",
+   "at3d": [
+    12.5,
+    0.3,
+    -3.0
+   ],
+   "dy": 20,
+   "size": 25,
+   "text": "LEGENDARY",
+   "fill": "#ffc828"
+  },
+  {
+   "type": "text",
+   "at3d": [
+    25,
+    0.3,
+    0.0
+   ],
+   "dy": 20,
+   "size": 25,
+   "text": "HALLOWEEN",
+   "fill": "#ff7814"
+  },
+  {
+   "type": "text",
+   "at3d": [
+    37.5,
+    0.3,
+    3.0
+   ],
+   "dy": 20,
+   "size": 25,
+   "text": "UNCOMMON",
+   "fill": "#5adc6e"
+  },
+  {
+   "type": "text",
+   "at3d": [
+    50,
+    0.3,
+    6.0
+   ],
+   "dy": 20,
+   "size": 25,
+   "text": "COMMON",
+   "fill": "#bebec3"
+  },
+  {
+   "type": "text",
+   "x": 640,
+   "y": 70,
+   "size": 90,
+   "text": "COLLECT 80+ DOGS!",
+   "fill": [
+    "#ffe066",
+    "#ffb21f"
+   ]
+  },
+  {
+   "type": "pill",
+   "x": 640,
+   "y": 150,
+   "w": 500,
+   "h": 52,
+   "fill": [
+    "#ff5a6e",
+    "#d9304a"
+   ],
+   "text": "FROM COMMON TO DIVINE",
+   "textSize": 34
+  }
+ ]
+}

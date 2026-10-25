@@ -1,0 +1,173 @@
+{
+ "w": 1920,
+ "h": 1080,
+ "design": 1280,
+ "islands": [
+  "isl_main.json"
+ ],
+ "cuts": [
+  {
+   "at": [
+    0,
+    0
+   ],
+   "r": 105,
+   "ymin": 0.6
+  }
+ ],
+ "dogs": [
+  {
+   "file": "p_shadow_cerberus.json",
+   "pose": "mordida",
+   "pos": [
+    0,
+    0,
+    -10
+   ],
+   "yaw": 172,
+   "scale": 5.4
+  },
+  {
+   "file": "p_knight_dog.json",
+   "pose": "galope2",
+   "pos": [
+    -14,
+    0,
+    36
+   ],
+   "yaw": -35,
+   "scale": 2.2,
+   "lift": 1.5
+  },
+  {
+   "file": "p_samurai_shiba.json",
+   "pose": "galope1",
+   "pos": [
+    17,
+    0,
+    38
+   ],
+   "yaw": 40,
+   "scale": 2.2
+  },
+  {
+   "file": "p_snow_husky.json",
+   "pose": "mordida",
+   "pos": [
+    -36,
+    0,
+    12
+   ],
+   "yaw": -60,
+   "scale": 2.2
+  },
+  {
+   "file": "p_golden.json",
+   "pose": "galope2",
+   "pos": [
+    32,
+    0,
+    16
+   ],
+   "yaw": 60,
+   "scale": 2.2
+  },
+  {
+   "file": "p_dragon_hound.json",
+   "pose": "voo",
+   "pos": [
+    -40,
+    0,
+    30
+   ],
+   "y": 40,
+   "yaw": -55,
+   "roll": -12,
+   "scale": 2.4
+  }
+ ],
+ "beams": [
+  {
+   "from": [
+    -31,
+    44,
+    23
+   ],
+   "to": [
+    -12,
+    34,
+    8
+   ],
+   "r0": 1,
+   "r1": 7,
+   "color": "#ff7a1a",
+   "core": "#ffe36b",
+   "puffs": 14
+  }
+ ],
+ "camera": {
+  "pos": [
+   6,
+   13,
+   98
+  ],
+  "target": [
+   0,
+   27,
+   0
+  ],
+  "fov": 56
+ },
+ "shadowCenter": [
+  0,
+  0,
+  20
+ ],
+ "shadowR": 110,
+ "overlay": [
+  {
+   "type": "burst",
+   "at3d": [
+    9,
+    36,
+    12
+   ],
+   "r": 50,
+   "points": 10,
+   "fill": [
+    "#fff27a",
+    "#ffb31a"
+   ],
+   "text": "POW!",
+   "textSize": 30,
+   "rot": 10
+  },
+  {
+   "type": "hp",
+   "x": 640,
+   "y": 82,
+   "w": 560,
+   "h": 30,
+   "pct": 0.62,
+   "fill": [
+    "#ff8a8a",
+    "#e23b54"
+   ],
+   "text": "SUPER BOSS: SHADOW CERBERUS",
+   "textSize": 34
+  },
+  {
+   "type": "pill",
+   "x": 640,
+   "y": 664,
+   "w": 700,
+   "h": 70,
+   "fill": [
+    "#a66bff",
+    "#6f3bd6"
+   ],
+   "text": "TEAM UP VS THE SUPER BOSS!",
+   "textSize": 46
+  }
+ ]
+}

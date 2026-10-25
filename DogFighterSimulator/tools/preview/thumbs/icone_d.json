@@ -1,0 +1,54 @@
+{
+ "w": 512,
+ "h": 512,
+ "design": 512,
+ "islands": [
+  "isl_common.json"
+ ],
+ "dogs": [
+  {
+   "file": "p_caramelo.json",
+   "pose": "animado",
+   "pos": [
+    0,
+    0,
+    2662
+   ],
+   "yaw": 215,
+   "scale": 3.2
+  }
+ ],
+ "clouds": [],
+ "camera": {
+  "pos": [
+   4,
+   24,
+   2692
+  ],
+  "target": [
+   0,
+   13,
+   2660
+  ],
+  "fov": 42
+ },
+ "shadowCenter": [
+  0,
+  9,
+  2662
+ ],
+ "shadowR": 40,
+ "overlay": [
+  {
+   "type": "text",
+   "x": 256,
+   "y": 450,
+   "size": 70,
+   "text": "DOG FIGHTER",
+   "fill": [
+    "#ffe066",
+    "#ffb21f"
+   ]
+  }
+ ]
+}

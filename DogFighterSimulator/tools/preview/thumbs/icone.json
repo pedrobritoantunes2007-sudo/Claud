@@ -1,0 +1,96 @@
+{
+ "w": 512,
+ "h": 512,
+ "design": 512,
+ "studio": true,
+ "hemi": 1.55,
+ "sunPower": 2.6,
+ "sunDir": [
+  -0.5,
+  0.7,
+  0.6
+ ],
+ "dogs": [
+  {
+   "file": "p_samurai_shiba.json",
+   "pose": "mordida",
+   "pos": [
+    0,
+    0,
+    0
+   ],
+   "y": 0,
+   "yaw": 215,
+   "scale": 1,
+   "outline": 0.05
+  }
+ ],
+ "camera": {
+  "fov": 34,
+  "focus": {
+   "dog": 0,
+   "part": "Head1",
+   "dist": 7.7,
+   "around": 32,
+   "height": 0.9,
+   "targetOffset": [
+    0,
+    -0.95,
+    0
+   ]
+  }
+ },
+ "shadowCenter": [
+  0,
+  0,
+  0
+ ],
+ "shadowR": 10,
+ "under": [
+  {
+   "type": "gradient",
+   "radial": true,
+   "top": "#ffd75e",
+   "bottom": "#ff6a1a",
+   "cx": 256,
+   "cy": 220,
+   "r": 380
+  },
+  {
+   "type": "rays",
+   "x": 256,
+   "y": 220,
+   "r": 520,
+   "count": 16,
+   "color": "#ffffff",
+   "alpha": 0.22
+  },
+  {
+   "type": "burst",
+   "x": 268,
+   "y": 205,
+   "r": 190,
+   "points": 13,
+   "inner": 0.78,
+   "fill": [
+    "#fff6c2",
+    "#ffe066"
+   ],
+   "ink": 12,
+   "rot": 6
+  }
+ ],
+ "overlay": [
+  {
+   "type": "text",
+   "x": 256,
+   "y": 455,
+   "size": 66,
+   "text": "DOG FIGHTER",
+   "fill": [
+    "#ffffff",
+    "#ffe066"
+   ]
+  }
+ ]
+}

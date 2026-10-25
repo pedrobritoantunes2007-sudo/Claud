@@ -1,0 +1,12 @@
+[
+ {"id":"parado","opts":{"Time":0.4}},
+ {"id":"animado","opts":{"Excite":1,"Time":0.2}},
+ {"id":"galope1","opts":{"Speed":5.5,"Phase":0.05}},
+ {"id":"galope2","opts":{"Speed":5.5,"Phase":0.55}},
+ {"id":"mordida","opts":{"Bite":0.13}},
+ {"id":"pulo","opts":{"VelY":14}},
+ {"id":"voo","opts":{"Action":"Fly","ActionT":3,"FlySpeed":64}},
+ {"id":"voo_lento","opts":{"Action":"Fly","ActionT":3,"FlySpeed":6,"Time":0.1}},
+ {"id":"voo_sobe","opts":{"Action":"Fly","ActionT":3,"FlySpeed":45,"FlyVelY":30,"Time":0.05},"root":{"pitch":0.55}},
+ {"id":"sentado","opts":{"Posture":"Sit","Look":[0.25,1.3,0]}}
+]

@@ -1,0 +1,245 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { margin: 0; background: #1e1a2e; font-family: "Fredoka", "Arial Rounded MT Bold", Arial, sans-serif; }
+  #sheet { display: inline-grid; gap: 18px; padding: 24px; background: linear-gradient(#2b2545, #1b1729); }
+  .card { width: var(--w); background: #ffffff10; border-radius: 22px; padding: 10px 10px 14px; text-align: center; border: 4px solid var(--rc); }
+  .card img { width: 100%; border-radius: 16px; display: block; }
+  .name { color: #fff; font-size: 30px; font-weight: 800; margin-top: 8px; text-shadow: 0 3px 0 #0008; }
+  .rar { color: var(--rc); font-size: 22px; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 0 #0008; }
+  .note { color: #ddd; font-size: 18px; margin-top: 4px; }
+  .title { grid-column: 1 / -1; color: #fff; font-size: 40px; font-weight: 800; text-align: center; text-shadow: 0 4px 0 #0008; }
+</style>
+</head>
+<body>
+<div id="sheet"></div>
+<script type="module">
+import * as THREE from './vendor/three.module.min.js';
+
+// Mini renderer das peças do Roblox (o dump.py gera as peças com o DogBuilder de verdade).
+// Roblox e three.js: Y para cima, mão direita — a matriz do CFrame entra direto.
+function wedgeGeometry(w, h, l) {
+  const x = w / 2, y = h / 2, z = l / 2;
+  const A = [-x, -y, -z], B = [x, -y, -z], C = [-x, -y, z], D = [x, -y, z], E = [-x, y, z], F = [x, y, z];
+  const tris = [A, C, D, A, D, B, C, E, F, C, F, D, A, B, F, A, F, E, A, E, C, B, D, F];
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(tris.flat(), 3));
+  g.computeVertexNormals();
+  return g;
+}
+
+function partMesh(p) {
+  const [sx, sy, sz] = p.size;
+  let geo;
+  if (p.mesh === 'Sphere') {
+    geo = new THREE.SphereGeometry(0.5, 20, 14);
+    geo.scale(sx, sy, sz);
+  } else if (p.cls === 'WedgePart') {
+    geo = wedgeGeometry(sx, sy, sz);
+  } else if (p.shape === 'Ball') {
+    geo = new THREE.SphereGeometry(Math.min(sx, sy, sz) / 2, 22, 16);
+  } else if (p.shape === 'Cylinder') {
+    const r = Math.min(sy, sz) / 2;
+    geo = new THREE.CylinderGeometry(r, r, sx, 22);
+    geo.rotateZ(Math.PI / 2);
+  } else {
+    geo = new THREE.BoxGeometry(sx, sy, sz);
+  }
+  const color = new THREE.Color().setRGB(p.color[0], p.color[1], p.color[2], THREE.SRGBColorSpace);
+  let mat;
+  const opacity = 1 - p.tr;
+  if (p.mat === 'Neon') {
+    const c = color.clone().lerp(new THREE.Color(1, 1, 1), 0.15);
+    mat = new THREE.MeshBasicMaterial({ color: c, transparent: opacity < 1, opacity });
+  } else {
+    const glass = p.mat === 'Glass' || p.mat === 'ForceField';
+    const ice = p.mat === 'Ice';
+    const metal = p.mat === 'Metal' || p.mat === 'DiamondPlate' || p.mat === 'Foil' || p.mat === 'CorrodedMetal';
+    let op = opacity;
+    if (glass) op = Math.min(op, 0.8); // vidro do Roblox com pouca transparência é bem colorido
+    if (ice) op = Math.min(op, 0.85);
+    mat = new THREE.MeshStandardMaterial({
+      color, flatShading: p.mesh !== 'Sphere' && p.shape !== 'Ball',
+      roughness: glass || ice ? 0.15 : (metal ? 0.35 : 0.72),
+      metalness: metal ? 0.55 : 0.0,
+      transparent: op < 1, opacity: op,
+      side: p.cls === 'WedgePart' ? THREE.DoubleSide : THREE.FrontSide,
+    });
+  }
+  const m = new THREE.Mesh(geo, mat);
+  const c = p.cf;
+  const M = new THREE.Matrix4().set(c[3], c[4], c[5], c[0], c[6], c[7], c[8], c[1], c[9], c[10], c[11], c[2], 0, 0, 0, 1);
+  m.matrixAutoUpdate = false;
+  m.matrix.copy(M);
+  m.castShadow = opacity > 0.5 && p.mat !== 'Neon';
+  m.receiveShadow = true;
+  return m;
+}
+
+let renderer = null;
+function getRenderer(size) {
+  if (!renderer) {
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true, alpha: false });
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.05;
+  }
+  renderer.setSize(size, size, false);
+  return renderer;
+}
+
+// view: { yaw (graus, 0 = de frente), pitch, zoom }
+function renderDog(dog, size, view) {
+  const r = getRenderer(size);
+  const scene = new THREE.Scene();
+  const bgc = view.bg || [0.62, 0.82, 0.98];
+  scene.background = new THREE.Color().setRGB(bgc[0], bgc[1], bgc[2], THREE.SRGBColorSpace);
+  const group = new THREE.Group();
+  const box = new THREE.Box3();
+  for (const p of dog.parts) {
+    const m = partMesh(p);
+    group.add(m);
+    m.updateMatrixWorld(true);
+    m.geometry.computeBoundingBox();
+    box.union(m.geometry.boundingBox.clone().applyMatrix4(m.matrix));
+  }
+  scene.add(group);
+  const floorY = Math.min(box.min.y, -(dog.hip + dog.rootY / 2)) - 0.02;
+  const center = box.getCenter(new THREE.Vector3());
+  const sizeV = box.getSize(new THREE.Vector3());
+  const radius = Math.max(sizeV.x, sizeV.y, sizeV.z) * 0.62;
+  // chão verde redondo (estilo catálogo)
+  const floor = new THREE.Mesh(new THREE.CylinderGeometry(radius * 0.95, radius * 1.0, radius * 0.12, 64),
+    new THREE.MeshStandardMaterial({ color: new THREE.Color().setRGB(0.42, 0.78, 0.36, THREE.SRGBColorSpace), roughness: 0.9 }));
+  floor.position.set(center.x, floorY - radius * 0.06, center.z);
+  floor.receiveShadow = true;
+  if (!view.noFloor) scene.add(floor);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x6a8a5a, 1.35));
+  const sun = new THREE.DirectionalLight(0xffffff, 2.3);
+  sun.position.set(center.x - radius * 2.2, center.y + radius * 4, center.z - radius * 3);
+  sun.target.position.copy(center);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  const sc = sun.shadow.camera;
+  sc.left = -radius * 2; sc.right = radius * 2; sc.top = radius * 2; sc.bottom = -radius * 2; sc.near = 0.1; sc.far = radius * 12;
+  sun.shadow.bias = -0.0008;
+  scene.add(sun, sun.target);
+  const fill = new THREE.DirectionalLight(0xdde8ff, 0.6);
+  fill.position.set(center.x + radius * 3, center.y + radius, center.z + radius * 2);
+  scene.add(fill);
+  // câmera: o cachorro olha para -Z; yaw 0 = de frente
+  const yaw = THREE.MathUtils.degToRad(view.yaw ?? 35);
+  const pitch = THREE.MathUtils.degToRad(view.pitch ?? 16);
+  const fov = 30;
+  const cam = new THREE.PerspectiveCamera(fov, 1, 0.05, 2000);
+  const dist = (radius * 0.95) / Math.sin(THREE.MathUtils.degToRad(fov / 2)) / (view.zoom ?? 1);
+  const dir = new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), -Math.cos(yaw) * Math.cos(pitch));
+  const target = new THREE.Vector3(center.x, center.y - sizeV.y * 0.08, center.z);
+  if (view.target) target.set(...view.target);
+  cam.position.copy(target).addScaledVector(dir, dist);
+  cam.lookAt(target);
+  r.render(scene, cam);
+  const url = r.domElement.toDataURL('image/png');
+  scene.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); });
+  return url;
+}
+
+function hex(c) {
+  return '#' + c.map(v => Math.round(Math.min(1, Math.max(0, v)) * 255).toString(16).padStart(2, '0')).join('');
+}
+
+// monta a folha: cards com a foto, nome e raridade
+window.buildSheet = (dogs, opts) => {
+  const sheet = document.getElementById('sheet');
+  sheet.innerHTML = '';
+  sheet.style.gridTemplateColumns = `repeat(${opts.cols || 4}, auto)`;
+  sheet.style.setProperty('--w', (opts.card || 300) + 'px');
+  if (opts.title) {
+    const t = document.createElement('div');
+    t.className = 'title';
+    t.textContent = opts.title;
+    sheet.appendChild(t);
+  }
+  if (opts.bare) {
+    // só a imagem (ícone): sem card, sem texto
+    sheet.style.padding = '0'; sheet.style.background = 'none'; sheet.style.gap = '0';
+    for (const dog of dogs) {
+      const img = document.createElement('img');
+      img.src = renderDog(dog, opts.size || 512, opts.view || {});
+      img.style.width = (opts.size || 512) + 'px'; img.style.display = 'block';
+      sheet.appendChild(img);
+    }
+    return true;
+  }
+  for (const dog of dogs) {
+    const views = dog.views || [opts.view || {}];
+    for (const v of views) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.setProperty('--rc', hex(dog.labelColor || dog.rarityColor));
+      const img = document.createElement('img');
+      img.src = renderDog(dog, opts.size || 512, v);
+      card.appendChild(img);
+      const n = document.createElement('div'); n.className = 'name'; n.textContent = dog.label || dog.name; card.appendChild(n);
+      const rr = document.createElement('div'); rr.className = 'rar'; rr.textContent = (dog.rarityLabel || dog.rarity).toUpperCase(); card.appendChild(rr);
+      if (dog.note || v.note) { const no = document.createElement('div'); no.className = 'note'; no.textContent = v.note || dog.note; card.appendChild(no); }
+      sheet.appendChild(card);
+    }
+  }
+  return true;
+};
+
+// 📸 FOLHA GRAVADA (2026-10): desenha as fotos numa grade (canvas) com título e legendas e manda para o
+// save_server.py (porta 8766) gravar o PNG na pasta do jogo. Roda em segundo plano: acompanhe window.progress.
+//   cells = [{ dog, view, label, sub, color }]   (color = [r,g,b] 0..1 da borda/legenda; padrão = cor da raridade)
+//   opts  = { cols, size, labelH, gap, title, port }
+// Os JSON das peças (dump.py) ficam em tools/preview/_cache (a página busca com fetch('_cache/arquivo.json')).
+window.renderDog = renderDog;
+window.saveSheet = (name, cells, opts = {}) => {
+  const progress = { done: 0, total: cells.length, saved: false, error: null };
+  window.progress = progress;
+  (async () => {
+    try {
+      const cols = Math.min(opts.cols || 4, cells.length), size = opts.size || 420, gap = opts.gap ?? 16;
+      const labelH = opts.labelH ?? 74, titleH = opts.title ? 84 : 0;
+      const rows = Math.ceil(cells.length / cols);
+      const W = cols * size + (cols + 1) * gap;
+      const H = titleH + rows * (size + labelH) + (rows + 1) * gap;
+      const cv = document.createElement('canvas');
+      cv.width = W; cv.height = H;
+      const g = cv.getContext('2d');
+      const grad = g.createLinearGradient(0, 0, 0, H);
+      grad.addColorStop(0, '#2b2545'); grad.addColorStop(1, '#1b1729');
+      g.fillStyle = grad; g.fillRect(0, 0, W, H);
+      g.textAlign = 'center';
+      if (opts.title) { g.fillStyle = '#fff'; g.font = 'bold 46px Arial'; g.fillText(opts.title, W / 2, 60); }
+      for (let i = 0; i < cells.length; i++) {
+        const c = cells[i];
+        const x = gap + (i % cols) * (size + gap), y = titleH + gap + Math.floor(i / cols) * (size + labelH + gap);
+        const img = new Image();
+        await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = renderDog(c.dog, size, c.view || {}); });
+        const rc = hex(c.color || c.dog.labelColor || c.dog.rarityColor || [1, 1, 1]);
+        g.fillStyle = '#ffffff12'; g.fillRect(x, y, size, size + labelH);
+        g.drawImage(img, x, y, size, size);
+        g.strokeStyle = rc; g.lineWidth = 5; g.strokeRect(x + 2.5, y + 2.5, size - 5, size + labelH - 5);
+        g.fillStyle = '#fff'; g.font = 'bold 28px Arial'; g.fillText(c.label ?? c.dog.name, x + size / 2, y + size + 33);
+        g.fillStyle = rc; g.font = 'bold 20px Arial'; g.fillText(c.sub ?? c.dog.rarity.toUpperCase(), x + size / 2, y + size + 60);
+        progress.done = i + 1;
+        await new Promise(r => setTimeout(r, 0));
+      }
+      const png = cv.toDataURL('image/png');
+      const resp = await fetch(`http://localhost:${opts.port || 8766}/save`, { method: 'POST', body: JSON.stringify({ name, png, folder: opts.folder }) });
+      progress.saved = resp.ok;
+    } catch (e) { progress.error = String(e); }
+  })();
+  return progress;
+};
+window.loadDogs = async (file) => (await fetch('_cache/' + file + '?t=' + Date.now())).json();
+window.ready = true;
+</script>
+</body>
+</html>

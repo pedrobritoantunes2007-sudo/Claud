@@ -1,0 +1,82 @@
+{
+ "w": 512,
+ "h": 512,
+ "design": 512,
+ "studio": true,
+ "hemi": 1.55,
+ "sunPower": 2.6,
+ "sunDir": [
+  -0.5,
+  0.7,
+  0.6
+ ],
+ "dogs": [
+  {
+   "file": "p_caramelo.json",
+   "pose": "animado",
+   "pos": [
+    0,
+    0,
+    0
+   ],
+   "y": 0,
+   "yaw": 200,
+   "scale": 1,
+   "outline": 0.05
+  }
+ ],
+ "camera": {
+  "fov": 34,
+  "focus": {
+   "dog": 0,
+   "part": "Head1",
+   "dist": 8.5,
+   "around": -25,
+   "height": 0.8,
+   "targetOffset": [
+    0,
+    -1.3,
+    0
+   ]
+  }
+ },
+ "shadowCenter": [
+  0,
+  0,
+  0
+ ],
+ "shadowR": 10,
+ "under": [
+  {
+   "type": "gradient",
+   "radial": true,
+   "top": "#7fd4ff",
+   "bottom": "#2f6fe0",
+   "cx": 256,
+   "cy": 220,
+   "r": 380
+  },
+  {
+   "type": "rays",
+   "x": 256,
+   "y": 220,
+   "r": 520,
+   "count": 16,
+   "color": "#ffffff",
+   "alpha": 0.2
+  }
+ ],
+ "overlay": [
+  {
+   "type": "text",
+   "x": 256,
+   "y": 448,
+   "size": 70,
+   "text": "DOG FIGHTER",
+   "fill": [
+    "#ffe066",
+    "#ffb21f"
+   ]
+  }
+ ]
+}

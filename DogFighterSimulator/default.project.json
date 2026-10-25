@@ -1,0 +1,28 @@
+{
+  "name": "DogFighterSimulator",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": { "$path": "src/shared" }
+    },
+    "ServerScriptService": {
+      "Server": { "$path": "src/server" }
+    },
+    "StarterPlayer": {
+      "$properties": { "EnableMouseLockOption": false },
+      "StarterPlayerScripts": {
+        "Client": { "$path": "src/client" }
+      }
+    },
+    "Workspace": {
+      "$properties": { "StreamingEnabled": false },
+      "Terrain": {
+        "$className": "Terrain",
+        "$properties": { "Decoration": false }
+      }
+    },
+    "Lighting": {
+      "$properties": { "ClockTime": 14.5, "Brightness": 1.7, "GlobalShadows": true }
+    }
+  }
+}

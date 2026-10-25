@@ -1,0 +1,7 @@
+PUBLICAR_DogFighter.bat
+*.rbxl
+*.rbxlx
+*.zip
+TUDO_DogFighter/
+__pycache__/
+tools/preview/_cache/

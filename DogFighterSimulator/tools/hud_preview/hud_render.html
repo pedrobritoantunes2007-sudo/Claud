@@ -1,0 +1,516 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+@font-face { font-family: 'Fredoka One'; src: url(fonts/FredokaOne.woff2) format('woff2'); }
+@font-face { font-family: 'Luckiest Guy'; src: url(fonts/LuckiestGuy.woff2) format('woff2'); }
+html, body { margin: 0; overflow: hidden; background: #9fd4f0; }
+canvas { display: block; }
+</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+// Desenha a árvore de telas que o hud_dump.py tirou do HUD de verdade (mini-Roblox), com as regras de
+// layout do Roblox: UDim2 + AnchorPoint, UIScale (escala em volta do AnchorPoint, passa para os filhos),
+// UIListLayout, UIGridLayout, UIPadding, AutomaticSize, TextScaled, UICorner, UIStroke (Border = por fora,
+// Contextual = contorno do texto), UIGradient, ZIndex (Sibling), ClipsDescendants, Rotation e ViewportFrame (three.js).
+import * as THREE from './three.module.min.js';
+
+const DUMP = window.DUMP;
+const W = DUMP.screen.W, H = DUMP.screen.H, PHONE = DUMP.screen.Touch;
+const DPR = window.devicePixelRatio || 1;
+const canvas = document.getElementById('c');
+canvas.width = W * DPR; canvas.height = H * DPR;
+canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+const ctx = canvas.getContext('2d');
+ctx.scale(DPR, DPR);
+await document.fonts.load('20px "Fredoka One"');
+await document.fonts.load('20px "Luckiest Guy"');
+
+const FONTS = { FredokaOne: 'Fredoka One', LuckiestGuy: 'Luckiest Guy' };
+const fontOf = (name) => `"${FONTS[name] || 'Fredoka One'}"`;
+const measure = (text, size, font) => { ctx.font = `${size}px ${fontOf(font)}`; return ctx.measureText(text).width; };
+const rgba = (c, a = 1) => `rgba(${Math.round(c[0] * 255)},${Math.round(c[1] * 255)},${Math.round(c[2] * 255)},${a})`;
+const kids = (n, cls) => n.k.filter((c) => c.c === cls);
+const comp = (n, cls) => n.k.find((c) => c.c === cls);
+const isGui = (n) => ['Frame', 'TextLabel', 'TextButton', 'TextBox', 'ImageLabel', 'ImageButton', 'ViewportFrame', 'ScrollingFrame', 'CanvasGroup'].includes(n.c);
+// imagens das ImageLabels que a prévia consegue abrir (caminho local, ex.: fotos de cima do mapa "maptiles/x.png")
+const IMAGES = new Map();
+{
+  const urls = new Set();
+  const walk = (n) => { if (n.p && typeof n.p.Image === 'string' && n.p.Image && !n.p.Image.startsWith('rbx')) urls.add(n.p.Image); (n.k || []).forEach(walk); };
+  DUMP.guis.forEach(walk);
+  await Promise.all([...urls].map(async (u) => {
+    const im = new Image(); im.src = u;
+    try { await im.decode(); IMAGES.set(u, im); } catch (e) { console.warn('imagem não abriu: ' + u); }
+  }));
+}
+const isText = (n) => n.c === 'TextLabel' || n.c === 'TextButton' || n.c === 'TextBox';
+
+////////////////////////////////////////////////////////////////// fundo (mesma cena da prévia aprovada)
+const bg = new Image(); bg.src = PHONE ? 'bg_phone.png' : 'bg_pc.png';
+await bg.decode();
+{
+  const s = Math.max(W / bg.width, H / bg.height);
+  ctx.drawImage(bg, (W - bg.width * s) / 2, (H - bg.height * s) / 2, bg.width * s, bg.height * s);
+}
+
+////////////////////////////////////////////////////////////////// 3D (peças do Roblox → three.js)
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.setPixelRatio(1);
+function wedgeGeometry(w, h, l) {
+  const x = w / 2, y = h / 2, z = l / 2;
+  const A = [-x, -y, -z], B = [x, -y, -z], C = [-x, -y, z], D = [x, -y, z], E = [-x, y, z], F = [x, y, z];
+  const tris = [A, C, D, A, D, B, C, E, F, C, F, D, A, B, F, A, F, E, A, E, C, B, D, F];
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(tris.flat(), 3));
+  g.computeVertexNormals();
+  return g;
+}
+function partMesh(p) {
+  const [sx, sy, sz] = p.size;
+  let geo;
+  if (p.mesh === 'Sphere') { geo = new THREE.SphereGeometry(0.5, 24, 16); geo.scale(sx, sy, sz); }
+  else if (p.cls === 'WedgePart') geo = wedgeGeometry(sx, sy, sz);
+  else if (p.shape === 'Ball') { const r = Math.min(sx, sy, sz) / 2; geo = new THREE.SphereGeometry(r, 24, 16); }
+  else if (p.shape === 'Cylinder') { const r = Math.min(sy, sz) / 2; geo = new THREE.CylinderGeometry(r, r, sx, 28); geo.rotateZ(Math.PI / 2); }
+  else geo = new THREE.BoxGeometry(sx, sy, sz);
+  const color = new THREE.Color().setRGB(p.color[0], p.color[1], p.color[2], THREE.SRGBColorSpace);
+  const m = new THREE.Mesh(geo, p.mat === 'Neon' ? new THREE.MeshBasicMaterial({ color })
+    : new THREE.MeshLambertMaterial({ color, flatShading: p.mesh !== 'Sphere' && p.shape !== 'Ball', side: p.cls === 'WedgePart' ? THREE.DoubleSide : THREE.FrontSide }));
+  const c = p.cf;
+  m.matrixAutoUpdate = false;
+  m.matrix.set(c[3], c[4], c[5], c[0], c[6], c[7], c[8], c[1], c[9], c[10], c[11], c[2], 0, 0, 0, 1);
+  return m;
+}
+function viewport(node, w, h) {
+  const scene = new THREE.Scene();
+  const p = node.p;
+  const amb = p.Ambient || [0.78, 0.78, 0.78], lc = p.LightColor || [0.55, 0.55, 0.55], ld = p.LightDirection || [-1, -1, -1];
+  scene.add(new THREE.AmbientLight(new THREE.Color().setRGB(amb[0], amb[1], amb[2], THREE.SRGBColorSpace), Math.PI));
+  const sun = new THREE.DirectionalLight(new THREE.Color().setRGB(lc[0], lc[1], lc[2], THREE.SRGBColorSpace), Math.PI);
+  const L = new THREE.Vector3(ld[0], ld[1], ld[2]).normalize();
+  sun.position.copy(L.clone().multiplyScalar(-100));
+  scene.add(sun); scene.add(sun.target);
+  for (const part of node.parts) scene.add(partMesh(part));
+  const cam = new THREE.PerspectiveCamera(node.cam ? node.cam.fov : 70, w / h, 0.05, 5000);
+  if (node.cam) {
+    const c = node.cam.cf;
+    cam.matrixAutoUpdate = false;
+    cam.matrix.set(c[3], c[4], c[5], c[0], c[6], c[7], c[8], c[1], c[9], c[10], c[11], c[2], 0, 0, 0, 1);
+    cam.updateMatrixWorld(true);
+  }
+  const pw = Math.max(2, Math.round(w * DPR * 2)), ph = Math.max(2, Math.round(h * DPR * 2));
+  renderer.setSize(pw, ph, false);
+  renderer.setClearColor(0x000000, 0);
+  renderer.render(scene, cam);
+  const out = document.createElement('canvas');
+  out.width = pw; out.height = ph;
+  out.getContext('2d').drawImage(renderer.domElement, 0, 0);
+  return out;
+}
+
+////////////////////////////////////////////////////////////////// cachorro no meio e coisas do Roblox (só cenário)
+const dogs = await (await fetch('dogs.json')).json();
+{
+  const scene = new THREE.Scene();
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x88a070, 1.5));
+  const sun = new THREE.DirectionalLight(0xfff4e0, 2.2); sun.position.set(4, 8, 3); scene.add(sun);
+  const g = new THREE.Group();
+  for (const part of dogs[0].parts) if (part.tr < 0.99) g.add(partMesh(part));
+  scene.add(g); g.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(g);
+  const c = box.getCenter(new THREE.Vector3()), sz = box.getSize(new THREE.Vector3());
+  const dist = Math.max(sz.x, sz.y, sz.z) * 2.1, yaw = 2.55, pitch = 0.32;
+  const cam = new THREE.PerspectiveCamera(30, 900 / 700, 0.1, 300);
+  cam.position.set(c.x + Math.sin(yaw) * dist * Math.cos(pitch), c.y + Math.sin(pitch) * dist, c.z + Math.cos(yaw) * dist * Math.cos(pitch));
+  cam.lookAt(c);
+  renderer.setSize(900, 700, false); renderer.setClearColor(0x000000, 0); renderer.render(scene, cam);
+  const w = PHONE ? 300 : 700, h = w * 700 / 900, cx = W / 2, groundY = PHONE ? 300 : 830;
+  const grd = ctx.createRadialGradient(cx, groundY - h * 0.04, 0, cx, groundY - h * 0.04, w * 0.21);
+  grd.addColorStop(0, 'rgba(0,0,0,0.35)'); grd.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = grd; ctx.beginPath(); ctx.ellipse(cx, groundY - h * 0.04, w * 0.21, h * 0.06, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.drawImage(renderer.domElement, cx - w / 2, groundY - h * 0.78, w, h);
+}
+function robloxButton(x, y, s, glyph) {
+  ctx.fillStyle = 'rgba(20,20,24,0.55)'; roundRect(x, y, s, s, s * 0.25); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.font = `${s * 0.5}px "Fredoka One"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(glyph, x + s / 2, y + s / 2 + 1);
+}
+function roundRect(x, y, w, h, r) {
+  r = Math.max(0, Math.min(r, w / 2, h / 2));
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+{
+  const inset = DUMP.screen.Inset, s = Math.min(44, inset - 14), y = (inset - s) / 2;
+  robloxButton(12, y, s, '≡');
+  robloxButton(12 + s + 8, y, s, '✉');
+  if (PHONE) {
+    // analógico e pulo do Roblox (tela pequena: pulo 70 px em (W-95, H-90))
+    ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 3; ctx.fillStyle = 'rgba(0,0,0,0.12)';
+    ctx.beginPath(); ctx.arc(110, 300, 55, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,0.4)'; ctx.beginPath(); ctx.arc(110, 300, 20, 0, Math.PI * 2); ctx.fill();
+    const small = Math.min(W, H) <= 500, js = small ? 70 : 120;
+    const jx = small ? W - (js * 1.5 - 10) + js / 2 : W - (js * 1.5 - 10) + js / 2;
+    const jy = small ? H - js - 20 + js / 2 : H - js * 1.75 + js / 2;
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.fillStyle = 'rgba(0,0,0,0.18)';
+    ctx.beginPath(); ctx.arc(jx, jy, js / 2, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = `${js * 0.43}px "Fredoka One"`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('⬆', jx, jy);
+  }
+}
+
+////////////////////////////////////////////////////////////////// layout (regras do Roblox)
+function udimSize(u, rect, k, sc) {
+  // SizeConstraint: RelativeYY = as duas escalas pela altura do pai; RelativeXX = pela largura
+  const bw = sc === 'RelativeYY' ? rect.h : rect.w, bh = sc === 'RelativeXX' ? rect.w : rect.h;
+  return [bw * u[0] + u[1] * k, bh * u[2] + u[3] * k];
+}
+// TextWrapped: quebra nas palavras (como o Roblox) — usado na medida do TextScaled e no desenho
+function wrapLines(txt, size, font, w) {
+  const out = [];
+  for (const para of txt.split('\n')) {
+    let line = '';
+    for (const word of para.split(' ')) {
+      const test = line ? line + ' ' + word : word;
+      if (line && measure(test, size, font) > w) { out.push(line); line = word; } else line = test;
+    }
+    out.push(line);
+  }
+  return out;
+}
+// RichText: <font color>, <b>, <i>, <br/> (o resto das marcas só some) -> pedaços com cor
+const ENT = { lt: '<', gt: '>', amp: '&', quot: '"', apos: "'" };
+const decode = (t) => t.replace(/&(lt|gt|amp|quot|apos);/g, (_, e) => ENT[e]);
+function colorAttr(attrs) {
+  let m = /color\s*=\s*["']#([0-9a-fA-F]{6})["']/.exec(attrs);
+  if (m) return [0, 2, 4].map((i) => parseInt(m[1].slice(i, i + 2), 16) / 255);
+  m = /color\s*=\s*["']rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)["']/.exec(attrs);
+  if (m) return [m[1], m[2], m[3]].map((v) => Number(v) / 255);
+  return null;
+}
+function richRuns(txt, base) {
+  const runs = [], stack = [base];
+  const re = /<(\/?)(\w+)([^>]*)>/g;
+  let last = 0, m;
+  while ((m = re.exec(txt))) {
+    if (m.index > last) runs.push({ t: decode(txt.slice(last, m.index)), c: stack[stack.length - 1] });
+    last = re.lastIndex;
+    if (m[2] === 'br') { runs.push({ t: '\n', c: stack[stack.length - 1] }); continue; }
+    if (m[1]) { if (stack.length > 1) stack.pop(); continue; }
+    if (m[3].trim().endsWith('/')) continue;
+    stack.push(m[2] === 'font' ? (colorAttr(m[3]) || stack[stack.length - 1]) : stack[stack.length - 1]);
+  }
+  if (last < txt.length) runs.push({ t: decode(txt.slice(last)), c: stack[stack.length - 1] });
+  return runs;
+}
+const plainText = (p) => (p.RichText ? richRuns(String(p.Text ?? ''), [0, 0, 0]).map((r) => r.t).join('') : String(p.Text ?? ''));
+function textSizeOf(n, w, h, k) {
+  const p = n.p;
+  const txt = plainText(p);
+  if (!p.TextScaled) return (p.TextSize || 14) * k;
+  const tc = comp(n, 'UITextSizeConstraint');
+  // (o limite de 100 px do TextScaled vale ANTES da UIScale: uma UIScale nos pais deixa passar de 100)
+  const max = Math.min(100, tc ? tc.p.MaxTextSize : 100) * k;
+  let lo = 1, hi = Math.max(1, Math.min(max, h));
+  for (let i = 0; i < 18; i++) {
+    const mid = (lo + hi) / 2;
+    let fits;
+    if (p.TextWrapped) {
+      const lines = wrapLines(txt, mid, p.Font, w);
+      fits = lines.length * mid <= h && lines.every((l) => measure(l, mid, p.Font) <= w);
+    } else fits = measure(txt, mid, p.Font) <= w && mid <= h;
+    if (fits) lo = mid; else hi = mid;
+  }
+  return lo;
+}
+function paddingOf(n, w, h, k) {
+  const pad = comp(n, 'UIPadding');
+  if (!pad) return [0, 0, 0, 0];
+  const g = (u, base) => (u ? u[0] * base + u[1] * k : 0);
+  const out = [g(pad.p.PaddingLeft, w), g(pad.p.PaddingTop, h), g(pad.p.PaddingRight, w), g(pad.p.PaddingBottom, h)];
+  // ícone na ponta de um texto (Kit: placeLead) — no jogo a conta usa o AbsoluteSize; aqui refaz com o tamanho real
+  const a = n.a || {};
+  if (a.LeadPad != null && a.LeadMode === 'lead') {
+    let icon = (h - out[1] - out[3]) * a.LeadPad;
+    if (a.LeadMax) icon = Math.min(icon, a.LeadMax * k);
+    out[0] = (pad.p.PaddingLeft ? pad.p.PaddingLeft[0] * w : 0) + (a.LeadBase || 0) * k + Math.max(0, icon) + 4 * k;
+  }
+  return out;
+}
+// tamanho do objeto (sem posição): base, UIScale e AutomaticSize
+function measureNode(n, rect, k) {
+  const p = n.p;
+  const us = comp(n, 'UIScale');
+  const u = us ? us.p.Scale : 1;
+  let [w, h] = udimSize(p.Size || [0, 100, 0, 100], rect, k, p.SizeConstraint);
+  // UISizeConstraint (em pixels; MaxSize infinito chega como 0) e UIAspectRatioConstraint (padrão: cabe dentro)
+  const sc = comp(n, 'UISizeConstraint');
+  if (sc) {
+    const mn = sc.p.MinSize || [0, 0], mx = sc.p.MaxSize || [0, 0];
+    if (mx[0] > 0) w = Math.min(w, mx[0] * k);
+    if (mx[1] > 0) h = Math.min(h, mx[1] * k);
+    w = Math.max(w, mn[0] * k); h = Math.max(h, mn[1] * k);
+  }
+  const ar = comp(n, 'UIAspectRatioConstraint');
+  if (ar && w > 0 && h > 0) {
+    const ratio = ar.p.AspectRatio || 1;
+    if ((ar.p.AspectType || 'FitWithinMaxSize') === 'ScaleWithParentSize') {
+      if ((ar.p.DominantAxis || 'Width') === 'Width') h = w / ratio; else w = h * ratio;
+    } else if (w / h > ratio) w = h * ratio; else h = w / ratio;
+  }
+  w *= u; h *= u;
+  const kk = k * u;
+  n.kk = kk;
+  const auto = p.AutomaticSize || 'None';
+  if (auto !== 'None') {
+    const [pl, pt, pr, pb] = paddingOf(n, w, h, kk);
+    let cw = 0, ch = 0;
+    if (isText(n)) {
+      const size = (p.TextSize || 14) * kk;
+      cw = measure(plainText(p), size, p.Font);
+      ch = size;
+    }
+    // filhos (frames que crescem com o conteúdo, ex.: bolinha de aviso)
+    const inner = { x: 0, y: 0, w: Math.max(0, w - pl - pr), h: Math.max(0, h - pt - pb) };
+    const list = comp(n, 'UIListLayout');
+    let along = 0, cross = 0, count = 0;
+    for (const c of n.k) {
+      if (!isGui(c) || c.p.Visible === false) continue;
+      const [cwid, chei] = measureNode(c, inner, kk);
+      if (list) {
+        const horiz = list.p.FillDirection === 'Horizontal';
+        along += horiz ? cwid : chei; cross = Math.max(cross, horiz ? chei : cwid); count++;
+      } else {
+        const [px, py] = [(c.p.Position || [0, 0, 0, 0])[1] * kk, (c.p.Position || [0, 0, 0, 0])[3] * kk];
+        cw = Math.max(cw, px + cwid); ch = Math.max(ch, py + chei);
+      }
+    }
+    if (list && count) {
+      const gap = (list.p.Padding ? list.p.Padding[1] : 0) * kk * (count - 1);
+      if (list.p.FillDirection === 'Horizontal') { cw = Math.max(cw, along + gap); ch = Math.max(ch, cross); }
+      else { ch = Math.max(ch, along + gap); cw = Math.max(cw, cross); }
+    }
+    if (auto === 'X' || auto === 'XY') w = Math.max(w, cw + pl + pr);
+    if (auto === 'Y' || auto === 'XY') h = Math.max(h, ch + pt + pb);
+  }
+  n.mw = w; n.mh = h;
+  return [w, h];
+}
+function layoutChildren(n) {
+  const [pl, pt, pr, pb] = paddingOf(n, n.w, n.h, n.kk);
+  const rect = { x: n.x + pl, y: n.y + pt, w: Math.max(0, n.w - pl - pr), h: Math.max(0, n.h - pt - pb) };
+  const k = n.kk;
+  const children = n.k.filter((c) => isGui(c));
+  const list = comp(n, 'UIListLayout');
+  const grid = comp(n, 'UIGridLayout');
+  const sorted = children.map((c, i) => [c, i]).sort((a, b) => ((a[0].p.LayoutOrder || 0) - (b[0].p.LayoutOrder || 0)) || (a[1] - b[1])).map((x) => x[0]);
+  if (grid) {
+    const g = grid.p;
+    const cw = rect.w * g.CellSize[0] + g.CellSize[1] * k, chh = rect.h * g.CellSize[2] + g.CellSize[3] * k;
+    const gx = rect.w * g.CellPadding[0] + g.CellPadding[1] * k, gy = rect.h * g.CellPadding[2] + g.CellPadding[3] * k;
+    const vis = sorted.filter((c) => c.p.Visible !== false);
+    let cols = Math.max(1, Math.floor((rect.w + gx) / (cw + gx)));
+    if (g.FillDirectionMaxCells > 0) cols = Math.min(cols, g.FillDirectionMaxCells);
+    const rows = Math.ceil(vis.length / cols);
+    const usedCols = Math.min(cols, vis.length);
+    const bw = usedCols * cw + (usedCols - 1) * gx, bh = rows * chh + (rows - 1) * gy;
+    const x0 = g.HorizontalAlignment === 'Right' ? rect.x + rect.w - bw : g.HorizontalAlignment === 'Center' ? rect.x + (rect.w - bw) / 2 : rect.x;
+    const y0 = g.VerticalAlignment === 'Bottom' ? rect.y + rect.h - bh : g.VerticalAlignment === 'Center' ? rect.y + (rect.h - bh) / 2 : rect.y;
+    vis.forEach((c, i) => {
+      measureNode(c, rect, k);
+      c.w = cw; c.h = chh; c.x = x0 + (i % cols) * (cw + gx); c.y = y0 + Math.floor(i / cols) * (chh + gy);
+      layoutChildren(c);
+    });
+    return;
+  }
+  if (list) {
+    const L = list.p, horiz = L.FillDirection === 'Horizontal';
+    const vis = sorted.filter((c) => c.p.Visible !== false);
+    const sizes = vis.map((c) => measureNode(c, rect, k));
+    const gap = (L.Padding ? L.Padding[0] * (horiz ? rect.w : rect.h) + L.Padding[1] * k : 0);
+    const total = sizes.reduce((s, z) => s + (horiz ? z[0] : z[1]), 0) + gap * Math.max(0, vis.length - 1);
+    const align = horiz ? L.HorizontalAlignment : L.VerticalAlignment;
+    let pos = horiz ? rect.x : rect.y;
+    const span = horiz ? rect.w : rect.h;
+    if (align === 'Center') pos += (span - total) / 2; else if (align === 'Right' || align === 'Bottom') pos += span - total;
+    vis.forEach((c, i) => {
+      const [cw, chh] = sizes[i];
+      c.w = cw; c.h = chh;
+      if (horiz) {
+        c.x = pos;
+        c.y = L.VerticalAlignment === 'Center' ? rect.y + (rect.h - chh) / 2 : L.VerticalAlignment === 'Bottom' ? rect.y + rect.h - chh : rect.y;
+        pos += cw + gap;
+      } else {
+        c.y = pos;
+        c.x = L.HorizontalAlignment === 'Center' ? rect.x + (rect.w - cw) / 2 : L.HorizontalAlignment === 'Right' ? rect.x + rect.w - cw : rect.x;
+        pos += chh + gap;
+      }
+      layoutChildren(c);
+    });
+    return;
+  }
+  for (const c of children) {
+    const [cw, chh] = measureNode(c, rect, k);
+    const P = c.p.Position || [0, 0, 0, 0], A = c.p.AnchorPoint || [0, 0];
+    const ax = rect.x + rect.w * P[0] + P[1] * k, ay = rect.y + rect.h * P[2] + P[3] * k;
+    c.w = cw; c.h = chh; c.x = ax - cw * A[0]; c.y = ay - chh * A[1];
+    layoutChildren(c);
+  }
+  // ícone da ponta num texto centralizado/à direita (Kit: followText usa o TextBounds) — encosta no começo do texto
+  const xa = n.p.TextXAlignment || 'Center';
+  if (isText(n) && n.a && n.a.LeadMode === 'lead' && xa !== 'Left') {
+    const icon = children.find((c) => c.n === 'TextIcon');
+    if (icon) {
+      const size = textSizeOf(n, rect.w, rect.h, n.kk);
+      const txt = plainText(n.p);
+      const lines = n.p.TextWrapped ? wrapLines(txt, size, n.p.Font, rect.w) : [txt];
+      const tw = Math.min(rect.w, Math.max(...lines.map((l) => measure(l, size, n.p.Font))));
+      const left = xa === 'Right' ? rect.x + rect.w - tw : rect.x + (rect.w - tw) / 2;
+      icon.x = left - 4 * k - icon.w;
+      layoutChildren(icon);
+    }
+  }
+}
+
+////////////////////////////////////////////////////////////////// pintura
+function gradientFill(n, grad, base, alpha) {
+  const g = grad.p;
+  const rot = (g.Rotation || 0) * Math.PI / 180;
+  const dx = Math.cos(rot), dy = Math.sin(rot);
+  const len = Math.abs(n.w * dx) + Math.abs(n.h * dy);
+  const cx = n.x + n.w / 2, cy = n.y + n.h / 2;
+  const off = g.Offset || [0, 0];
+  const lg = ctx.createLinearGradient(cx - dx * len / 2 + off[0] * n.w, cy - dy * len / 2 + off[1] * n.h, cx + dx * len / 2 + off[0] * n.w, cy + dy * len / 2 + off[1] * n.h);
+  const cs = g.Color || [[0, 1, 1, 1], [1, 1, 1, 1]];
+  const ts = g.Transparency || [[0, 0], [1, 0]];
+  const times = [...new Set([...cs.map((x) => x[0]), ...ts.map((x) => x[0])])].sort((a, b) => a - b);
+  const at = (seq, t, n2) => {
+    for (let i = 0; i < seq.length - 1; i++) {
+      const a = seq[i], b = seq[i + 1];
+      if (t >= a[0] && t <= b[0]) { const f = b[0] > a[0] ? (t - a[0]) / (b[0] - a[0]) : 0; return a.slice(1).map((v, j) => v + (b[j + 1] - v) * f); }
+    }
+    return seq[t <= seq[0][0] ? 0 : seq.length - 1].slice(1);
+  };
+  for (const t of times) {
+    const c = at(cs, t), tr = at(ts, t)[0];
+    lg.addColorStop(Math.min(1, Math.max(0, t)), rgba([c[0] * base[0], c[1] * base[1], c[2] * base[2]], alpha * (1 - tr)));
+  }
+  return lg;
+}
+function cornerOf(n) {
+  const c = comp(n, 'UICorner');
+  if (!c) return 0;
+  const r = c.p.CornerRadius || [0, 8];
+  return Math.min(r[0] * Math.min(n.w, n.h) + r[1] * n.kk, Math.min(n.w, n.h) / 2);
+}
+function paintNode(n) {
+  if (n.p.Visible === false || !isGui(n)) return;
+  ctx.save();
+  if (n.p.Rotation) {
+    const cx = n.x + n.w / 2, cy = n.y + n.h / 2;
+    ctx.translate(cx, cy); ctx.rotate(n.p.Rotation * Math.PI / 180); ctx.translate(-cx, -cy);
+  }
+  const r = cornerOf(n);
+  const bgT = n.p.BackgroundTransparency ?? 0;
+  const grad = comp(n, 'UIGradient');
+  if (n.c !== 'ViewportFrame' && bgT < 1 && n.w > 0 && n.h > 0) {
+    const base = n.p.BackgroundColor3 || [0.64, 0.64, 0.64];
+    roundRect(n.x, n.y, n.w, n.h, r);
+    ctx.fillStyle = grad && grad.p.Enabled !== false ? gradientFill(n, grad, base, 1 - bgT) : rgba(base, 1 - bgT);
+    ctx.fill();
+  }
+  if ((n.c === 'ImageLabel' || n.c === 'ImageButton') && IMAGES.has(n.p.Image) && n.w > 0 && n.h > 0) {
+    ctx.save();
+    ctx.globalAlpha = 1 - (n.p.ImageTransparency || 0);
+    ctx.drawImage(IMAGES.get(n.p.Image), n.x, n.y, n.w, n.h);
+    ctx.restore();
+  }
+  if (n.c === 'ViewportFrame' && n.parts && n.parts.length && n.w > 1 && n.h > 1) {
+    const img = viewport(n, n.w, n.h);
+    ctx.save();
+    if (r > 0) { roundRect(n.x, n.y, n.w, n.h, r); ctx.clip(); }
+    ctx.globalAlpha = 1 - (n.p.ImageTransparency || 0);
+    ctx.drawImage(img, n.x, n.y, n.w, n.h);
+    ctx.restore();
+  }
+  for (const st of kids(n, 'UIStroke')) {
+    const s = st.p;
+    if (s.Enabled === false || (s.ApplyStrokeMode || 'Contextual') !== 'Border' && isText(n)) continue;
+    const t = (s.Thickness ?? 1) * n.kk;
+    if (t <= 0 || (s.Transparency ?? 0) >= 1) continue;
+    roundRect(n.x - t / 2, n.y - t / 2, n.w + t, n.h + t, r > 0 ? r + t / 2 : 0);
+    ctx.lineWidth = t; ctx.lineJoin = 'round';
+    ctx.strokeStyle = rgba(s.Color || [0, 0, 0], 1 - (s.Transparency ?? 0));
+    ctx.stroke();
+  }
+  if (isText(n) && n.p.Text) {
+    const p = n.p, [pl, pt, pr, pb] = paddingOf(n, n.w, n.h, n.kk);
+    const bx = n.x + pl, by = n.y + pt, bw = n.w - pl - pr, bh = n.h - pt - pb;
+    const size = textSizeOf(n, bw, bh, n.kk);
+    const txt = plainText(p);
+    const runs = p.RichText ? richRuns(String(p.Text), p.TextColor3 || [0, 0, 0]) : null;
+    ctx.font = `${size}px ${fontOf(p.Font)}`;
+    ctx.textBaseline = 'middle';
+    const xa = p.TextXAlignment || 'Center';
+    ctx.textAlign = xa === 'Left' ? 'left' : xa === 'Right' ? 'right' : 'center';
+    const tx = xa === 'Left' ? bx : xa === 'Right' ? bx + bw : bx + bw / 2;
+    const ya = p.TextYAlignment || 'Center';
+    const lines = p.TextWrapped ? wrapLines(txt, size, p.Font, bw) : [txt];
+    const blockH = lines.length * size;
+    const y0 = ya === 'Top' ? by : ya === 'Bottom' ? by + bh - blockH : by + (bh - blockH) / 2;
+    const yOff = p.Font === 'LuckiestGuy' ? size * 0.1 : size * 0.04;
+    const alpha = 1 - (p.TextTransparency || 0);
+    const st = kids(n, 'UIStroke').find((s) => (s.p.ApplyStrokeMode || 'Contextual') === 'Contextual' && s.p.Enabled !== false);
+    // cor de cada letra (RichText) — a linha é desenhada em pedaços da esquerda para a direita
+    const colors = [];
+    if (runs) for (const r of runs) for (const ch of r.t) colors.push(r.c);
+    let cursor = 0;
+    lines.forEach((line, i) => {
+      const ty = y0 + size * (i + 0.5);
+      const pieces = [];
+      if (runs) {
+        const at = Math.max(cursor, txt.indexOf(line, cursor));
+        cursor = at + line.length;
+        let cur = null;
+        [...line].forEach((ch, j) => {
+          const c = colors[at + j] || p.TextColor3 || [0, 0, 0];
+          if (cur && cur.c === c) cur.t += ch; else { cur = { t: ch, c }; pieces.push(cur); }
+        });
+      } else pieces.push({ t: line, c: p.TextColor3 || [0, 0, 0] });
+      const lw = measure(line, size, p.Font);
+      let x = xa === 'Left' ? bx : xa === 'Right' ? bx + bw - lw : bx + (bw - lw) / 2;
+      ctx.font = `${size}px ${fontOf(p.Font)}`;
+      ctx.textAlign = 'left';
+      for (const pc of pieces) {
+        if (st && alpha > 0) {
+          ctx.lineWidth = 2 * (st.p.Thickness ?? 1) * n.kk; ctx.lineJoin = 'round';
+          ctx.strokeStyle = rgba(st.p.Color || [0, 0, 0], alpha * (1 - (st.p.Transparency ?? 0)));
+          ctx.strokeText(pc.t, x, ty + yOff);
+        }
+        ctx.fillStyle = rgba(pc.c, alpha);
+        ctx.fillText(pc.t, x, ty + yOff);
+        x += measure(pc.t, size, p.Font);
+        ctx.font = `${size}px ${fontOf(p.Font)}`;
+      }
+    });
+  }
+  if (n.c === 'CanvasGroup') { roundRect(n.x, n.y, n.w, n.h, r); ctx.clip(); } // (CanvasGroup recorta até girado e com canto)
+  else if (n.p.ClipsDescendants || n.c === 'ScrollingFrame') { ctx.beginPath(); ctx.rect(n.x, n.y, n.w, n.h); ctx.clip(); }
+  const order = n.k.filter(isGui).map((c, i) => [c, i]).sort((a, b) => ((a[0].p.ZIndex ?? 1) - (b[0].p.ZIndex ?? 1)) || (a[1] - b[1]));
+  for (const [c] of order) paintNode(c);
+  ctx.restore();
+}
+
+const guis = DUMP.guis.filter((g) => g.p.Enabled !== false).sort((a, b) => (a.p.DisplayOrder || 0) - (b.p.DisplayOrder || 0));
+for (const g of guis) {
+  const inset = g.p.IgnoreGuiInset ? 0 : DUMP.screen.Inset;
+  g.x = 0; g.y = inset; g.w = W; g.h = H - inset; g.kk = 1;
+  layoutChildren(g);
+  const order = g.k.filter(isGui).map((c, i) => [c, i]).sort((a, b) => ((a[0].p.ZIndex ?? 1) - (b[0].p.ZIndex ?? 1)) || (a[1] - b[1]));
+  for (const [c] of order) paintNode(c);
+}
+window.ready = true;
+</script>
+</body></html>
