@@ -1495,8 +1495,8 @@ local function useAbility(player, slot, aim, aimPoint)
 		if now < (f[key] or 0) or now < (f.NextCast or 0) then
 			return false
 		end
-		-- 🔓 poder liberado pelo NÍVEL do cachorro (tecla 2 = Lv.10, tecla 3 = Lv.25, tecla 4 = Lv.50)
-		local need = Config.PowerUnlockLevel(slot == 5 and 3 or slot - 1)
+		-- 🔓 poder liberado pelo NÍVEL do cachorro (depende da raridade: Config.POWER_UNLOCK_BY_RARITY)
+		local need = Config.PowerUnlockLevel(slot == 5 and 3 or slot - 1, f.Species.Rarity)
 		if (f.Level or 1) < need then
 			return false, "🔒 This power unlocks at Lv." .. need .. "!"
 		end
@@ -1619,7 +1619,7 @@ local function onLevelUp(player, dog, oldLevel)
 	local powers = species and DogData.PowersFor(dog.Species)
 	if powers then
 		for i = 1, 3 do
-			local need = Config.PowerUnlockLevel(i)
+			local need = Config.PowerUnlockLevel(i, species.Rarity)
 			local name = powers[i]
 			if name and oldLevel < need and dog.Level >= need and (i < 3 or Config.HasSupreme(species.Rarity)) then
 				local info = DogData.Specials[name]

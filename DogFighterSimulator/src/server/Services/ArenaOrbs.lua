@@ -87,7 +87,7 @@ local function apply(f, kind)
 		DataService.AddCash(player, math.floor(300 + f.Level * 60), "reward")
 		Fighters.Fx("Cash", { Position = f.Root.Position + Vector3.new(0, 4, 0), Amount = math.floor(300 + f.Level * 60), Player = player.UserId })
 	elseif kind.Id == "Power" then
-		if Config.HasSupreme(f.Species.Rarity) and Config.PowerUnlocked(f.Level, 3) then
+		if Config.HasSupreme(f.Species.Rarity) and Config.PowerUnlocked(f.Level, 3, f.Species.Rarity) then
 			player:SetAttribute("Supreme", math.min(100, (player:GetAttribute("Supreme") or 0) + 35))
 		else
 			DataService.GiveXP(player, math.floor(20 + f.Level * 6), "reward")

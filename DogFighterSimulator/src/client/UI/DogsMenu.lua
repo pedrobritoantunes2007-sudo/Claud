@@ -47,7 +47,8 @@ local function powerLine(speciesId, level)
 			local info = DogData.Specials[id]
 			local name = info and info.Name or id
 			name = (name:gsub("^SUPREME%s+", ""))
-			local need = Config.PowerUnlockLevel(index)
+			local sp = DogData.Species[speciesId]
+			local need = Config.PowerUnlockLevel(index, sp and sp.Rarity)
 			local locked = level ~= nil and level < need
 			table.insert(items, {
 				Icon = locked and "lock" or (index == 3 and "crown" or Icons.ForPower(id, info)),

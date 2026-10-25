@@ -47,7 +47,7 @@ local TIPS = {
 	"Catch wild dogs with 🐾 LEASHES! The Leash Shop is in the town square.",
 	"Come back every day for a FREE spin at my Dog Roulette! 🎰",
 	"Talk to the ❗ Mission NPC on each island to earn 💵 Cash!",
-	"Powers unlock at Lv.10, Lv.25 and Lv.50 — keep training!",
+	"Powers unlock as your dog levels up (Common dogs: Lv.3 and Lv.5) — keep training!",
 	"The ⚔️ ARENA portal at the end of Main Street takes you to the Main Island!",
 	"Every dog is special. Take good care of yours! 🐶",
 }

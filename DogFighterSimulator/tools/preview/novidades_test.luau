@@ -243,6 +243,22 @@ if rankTile then
 	end
 end
 
+---------------------------------------------------------------- 🔓 poderes por raridade, iniciais comuns, captura
+check(Config.PowerUnlockLevel(1, "Common") == 3 and Config.PowerUnlockLevel(2, "Common") == 5, "Comum: poderes no Lv.3 e Lv.5")
+check(Config.PowerUnlockLevel(1, "Uncommon") == 5 and Config.PowerUnlockLevel(2, "Uncommon") == 10, "Incomum: Lv.5 e Lv.10")
+do
+	local order = { "Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic" }
+	for i = 2, #order do
+		for k = 1, 3 do
+			check(Config.PowerUnlockLevel(k, order[i]) >= Config.PowerUnlockLevel(k, order[i - 1]), "poder " .. k .. ": " .. order[i] .. " não libera antes de " .. order[i - 1])
+		end
+	end
+end
+for _, c in ipairs(Config.STARTER_CHOICES) do
+	check(DogData.Species[c.Species] and DogData.Species[c.Species].Rarity == "Common", "inicial " .. c.Species .. " é Comum")
+end
+check(Config.CATCH.Difficulty == 0.25, "captura 4x mais difícil")
+
 print(string.format("RESULTADO: %d ok, %d falharam", oks, fails))
 if fails > 0 then
 	error("novidades: " .. fails .. " falharam")

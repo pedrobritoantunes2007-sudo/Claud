@@ -220,7 +220,7 @@ function Abilities.Start(HUD)
 		if not index or not character then
 			return nil
 		end
-		local need = Config.PowerUnlockLevel(index)
+		local need = Config.PowerUnlockLevel(index, character:GetAttribute("Rarity"))
 		if (character:GetAttribute("DogLevel") or 1) < need then
 			return need
 		end

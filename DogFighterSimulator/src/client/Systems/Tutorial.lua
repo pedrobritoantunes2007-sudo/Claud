@@ -269,8 +269,8 @@ local STEPS = {
 		Kind = "info",
 		Icon = "✨",
 		Title = "POWERS",
-		Text = "Keys 2, 3 and 4 are POWERS: they unlock at Lv.10, Lv.25 and Lv.50 (key 4 = SUPREME, Epic dogs and up). Powers land where you aim and need a moment to recharge.",
-		TextTouch = "The 2, 3 and 4 buttons are POWERS: they unlock at Lv.10, Lv.25 and Lv.50. Powers land where you aim and need a moment to recharge.",
+		Text = "Keys 2, 3 and 4 are POWERS: they unlock as your dog levels up — Common dogs at Lv.3 and Lv.5, rarer dogs later (key 4 = SUPREME, Epic dogs and up). Powers land where you aim and need a moment to recharge.",
+		TextTouch = "The 2, 3 and 4 buttons are POWERS: they unlock as your dog levels up (Common dogs at Lv.3 and Lv.5). Powers land where you aim and need a moment to recharge.",
 		Visual = { Keys = { "2", "3", "4" }, Flow = { "🔒", "⚡", "🔥", "👑" }, Dog = "mine", Action = "Roar" },
 	},
 	{

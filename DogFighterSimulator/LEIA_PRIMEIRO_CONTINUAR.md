@@ -17,6 +17,14 @@
 - IDs do jogo: `publicar_ids.json`.
 
 ## Estado atual (últimas mudanças)
+- 🔓🦮 2026-10-25 (o dono: "comuns mais fáceis de desbloquear as habilidades: a segunda nível 3 e a outra nível 5, no
+  incomum 5 e 10 e vai indo até mítico"; "nos 3 cachorros do início tem um incomum, quero só comuns"; "4 vezes mais
+  difícil capturar"):
+  - `Config.POWER_UNLOCK_BY_RARITY` (tecla 2 / 3 / 4): Comum 3/5/10 · Incomum 5/10/15 · Raro 8/15/25 · Épico 10/20/30 ·
+    Lendário 12/25/40 · Mítico e Halloween 15/30/50 · Divino 20/35/60. `Config.PowerUnlockLevel(index, raridade)`.
+  - Iniciais: Caramel Mutt, Pinscher (FAST, era o Snow Husky Incomum) e Bulldog — todos Comuns.
+  - `Config.CATCH.Difficulty = 0.25` multiplica toda chance de captura (Min agora 0,5%). A captura do tutorial continua
+    garantida.
 - 🧱🧍 2026-10-25 (o dono: sem recuo, bosses bugados, botão Z humano, boneco segue o cachorro, troca de cachorro
   travada, proibir pular o tutorial, início em branco no gráfico baixo):
   - 🧱 SEM RECUO: `Config.KNOCKBACK = false` → golpe/tiro/poder não empurram ninguém (`Fighters.Knock`; só o "jogar para

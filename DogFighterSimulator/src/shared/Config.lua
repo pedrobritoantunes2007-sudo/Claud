@@ -43,7 +43,7 @@ Config.TUTORIAL_SKIP = false
 -- como extra (a roleta dá 1 giro grátis por dia). Servidor: Services/CatchService · cliente: Systems/Catch.
 Config.STARTER_CHOICES = {
 	{ Species = "caramelo", Tag = "BALANCED" },
-	{ Species = "snow_husky", Tag = "FAST" },
+	{ Species = "pinscher", Tag = "FAST" }, -- (2026-10-25, o dono: "só comuns": era o Snow Husky, Incomum)
 	{ Species = "bulldog", Tag = "STRONG" },
 }
 Config.LEASHES = {
@@ -64,7 +64,9 @@ Config.CATCH = {
 	Range = 45, -- studs do seu cachorro até o selvagem
 	Cooldown = 2.4, -- s entre uma coleira e outra
 	FreePack = 5, -- 🎁 a 1ª compra da loja de coleiras é grátis: 5 coleiras normais
-	Min = 0.02,
+	-- (2026-10-25, pedido do dono: "deixa 4 vezes mais difícil capturar") × em toda chance (1 = como era)
+	Difficulty = 0.25,
+	Min = 0.005,
 	Max = 0.95,
 }
 -- chance de captura (0..1). hpPct = vida que sobrou (0..1); levelGap = level do selvagem − level do seu cachorro;
@@ -76,6 +78,7 @@ function Config.CatchChance(rarity, hpPct, leashMult, levelGap, luck, champion, 
 	local lvl = math.clamp(1 - math.max(0, levelGap or 0) * 0.03, 0.4, 1)
 	local lucky = 1 + (luck or 0) * 0.0375
 	local c = base * hp * (leashMult or 1) * lvl * lucky * (champion and Config.CATCH.Champion or 1) * (extra or 1)
+		* (Config.CATCH.Difficulty or 1)
 	return math.clamp(c, Config.CATCH.Min, Config.CATCH.Max)
 end
 
@@ -301,12 +304,25 @@ end
 -- 🔓 PODERES LIBERADOS PELO NÍVEL DO CACHORRO (2026-10, pedido do dono, "tipo Blox Fruits"): tecla 2 no Lv.10,
 -- tecla 3 no Lv.25 e a tecla 4 (Supremo, do Épico para cima) no Lv.50. O ataque 1 sempre funciona.
 -- Vale para o cachorro do jogador (selvagens e bosses usam os poderes como antes).
-Config.POWER_UNLOCK = { 10, 25, 50 } -- { tecla 2, tecla 3, tecla 4 }
-function Config.PowerUnlockLevel(index) -- index 1 = tecla 2, 2 = tecla 3, 3 = tecla 4 (Supremo)
-	return Config.POWER_UNLOCK[index] or 1
+Config.POWER_UNLOCK = { 10, 25, 50 } -- { tecla 2, tecla 3, tecla 4 } (raridade desconhecida)
+-- (2026-10-25, pedido do dono: "cachorros comuns são mais fáceis de desbloquear as habilidades: a segunda nível 3 e a
+-- outra nível 5, daí no incomum 5 e 10 e vai indo até mítico") — por raridade; a tecla 4 (Supremo) é do Épico para cima
+Config.POWER_UNLOCK_BY_RARITY = {
+	Common = { 3, 5, 10 },
+	Uncommon = { 5, 10, 15 },
+	Rare = { 8, 15, 25 },
+	Epic = { 10, 20, 30 },
+	Legendary = { 12, 25, 40 },
+	Mythic = { 15, 30, 50 },
+	Halloween = { 15, 30, 50 },
+	Divine = { 20, 35, 60 },
+}
+function Config.PowerUnlockLevel(index, rarity) -- index 1 = tecla 2, 2 = tecla 3, 3 = tecla 4 (Supremo)
+	local list = (rarity and Config.POWER_UNLOCK_BY_RARITY[rarity]) or Config.POWER_UNLOCK
+	return list[index] or 1
 end
-function Config.PowerUnlocked(level, index)
-	return (level or 1) >= Config.PowerUnlockLevel(index)
+function Config.PowerUnlocked(level, index, rarity)
+	return (level or 1) >= Config.PowerUnlockLevel(index, rarity)
 end
 
 -- 📜 NPC DAS MISSÕES (2026-10, pedido do dono): fica na entrada de cada ilha com a cara de um usuário do Roblox.
