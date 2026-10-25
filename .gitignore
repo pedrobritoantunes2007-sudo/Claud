@@ -8,3 +8,7 @@ Thumbs.db
 
 # rascunhos das ferramentas de teste
 tools/teste/fotos/
+
+# python
+__pycache__/
+*.pyc
