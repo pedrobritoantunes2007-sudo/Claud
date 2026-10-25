@@ -467,6 +467,14 @@ local function grantProduct(player, data, item)
 			already()
 		end
 	end
+	-- 💖 doação para o criador (não dá nada no jogo: título, agradecimento e a lista TOP SUPPORTERS)
+	if reward.Doacao then
+		local ok, Donation = pcall(require, script.Parent.DonationService)
+		if not (ok and Donation.Donated) then
+			error("DonationService indisponível")
+		end
+		Donation.Donated(player, data, reward.Doacao)
+	end
 	if reward.Acessorio then
 		local ok, Acc = pcall(require, script.Parent.AccessoryService)
 		if not (ok and Acc.Give) then
@@ -485,7 +493,10 @@ local function announce(player, item)
 		return
 	end
 	remotes.Purchased:FireClient(player, item.Key)
-	remotes.Notify:FireClient(player, item.Emoji .. " " .. item.Nome .. " — thanks for your purchase! 💛", "gold")
+	-- (a 💖 doação já agradece pelo DonationService)
+	if item.Tab ~= "donate" then
+		remotes.Notify:FireClient(player, item.Emoji .. " " .. item.Nome .. " — thanks for your purchase! 💛", "gold")
+	end
 end
 
 -- efeito na hora de um passe recém-comprado (sem precisar renascer)

@@ -728,6 +728,8 @@ local UTIL = {
 	{ Menu = "Trade", Label = "TRADE", Icon = "trade", Color = rgb(0x3fa7ff) },
 	{ Menu = "Codes", Label = "CODES", Icon = "key", Color = rgb(0xffbf2e) },
 	{ Menu = "Settings", Label = "SETTINGS", Icon = "gear", Color = rgb(0x8d97b5) },
+	-- 💖 (2026-10-25, pedido do dono: "crie um HUD donation, onde os jogadores podem doar robux para mim")
+	{ Menu = "Donate", Label = "DONATE", Icon = "heart", Color = rgb(0xff5c8a) },
 }
 
 local function openOrSoon(menuName, labelText)

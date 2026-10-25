@@ -1,7 +1,7 @@
 -- Economia e regras gerais do Dog Fighter Simulator.
 -- Uma moeda só (Cash). Comida = XP direto no cachorro equipado.
 local Config = {}
-local Variants = require(script.Parent.Variants)
+local Variants = nil -- (✨🥇🌈 Shared/Variants: carregado só quando um cachorro do perfil entra na conta — Config.Stats)
 
 -- 🔄 RECOMEÇO (2026-10-25, pedido do dono: "quero reiniciar o de todos" → "zerar progresso de todos"): com a captura
 -- "tipo pokémon" todo mundo começa do ZERO num save novo. O save antigo continua guardado em OLD_DATASTORE_NAME (para
@@ -149,6 +149,9 @@ Config.BOARD_CLANS = "ClanWeek_v1_" -- placar semanal dos clãs (+ nº da semana
 Config.BOARD_CATCHES = "TopCatches_v1" -- 🦮 mais capturas (de sempre)
 Config.BOARD_DEX = "TopDex_v1" -- 📖 Dex mais completo
 Config.BOARD_SEASON = "SeasonStars_v1_" -- 🎟️ estrelas do passe (+ nº da temporada)
+Config.BOARD_DONORS = "TopDonors_v1" -- 💖 quem mais doou Robux para o criador (lista do botão DONATE)
+-- 💖 títulos de quem doa (aparecem em cima da cabeça): a partir de quantos Robux doados no total
+Config.DONOR_TITLES = { { At = 1, Title = "Supporter" }, { At = 500, Title = "Super Supporter" }, { At = 2500, Title = "Legendary Supporter" } }
 
 ---------------------------------------------------------------- Casinha + tigelas
 -- Cada nível da casa aumenta a renda do time (HOUSE_INCOME_BONUS) e muda o visual. (Bowls = legado, sem uso.)
@@ -488,6 +491,7 @@ function Config.Stats(species, level, dog)
 	local rarity = Config.RARITY[species.Rarity]
 	local growth = (1 + Config.LEVEL_GROWTH * (level - 1)) * (1 + Config.STAR_BONUS * Config.StarsFor(level))
 	if dog then
+		Variants = Variants or require(script.Parent.Variants)
 		growth *= Variants.Mult(dog)
 	end
 	local s = species.Stats

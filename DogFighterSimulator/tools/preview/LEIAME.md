@@ -47,3 +47,16 @@ Foto: `python -m http.server 8765` nesta pasta, abrir `render.html` e chamar `bu
 - `python tools/preview/quest_test.py` — roda o `server/Services/QuestService.lua` de verdade num mini-Roblox com DataService,
   Fighters, ZoneGeo, Monetization e Progression falsos: NPC em cada ilha, menu, aceitar longe/perto, contar selvagens (golpe final e
   ajuda >= 20%), outra ilha não conta, missão de boss, prêmio (2x Cash), Fast Missions, trocar, desistir e missão salva no perfil.
+
+## 🌊🏆✨ Novidades de 2026-10-25 (mar, ranking, shiny, evoluir, Dex, acessórios, eventos, passe, clãs, trocas, doação)
+- `python3 tools/preview/run_shared.py tools/preview/novidades_test.luau` — roda os módulos de `src/shared` de verdade:
+  variantes (shiny 1/500, Gold/Rainbow, valor),
+  escolha do EVOLUIR (favoritos e troca ficam de fora), Dex com prêmios, acessórios (bônus com teto de 30%), calendário dos
+  eventos de fim de semana (horário de Brasília), Passe de Temporada (níveis, prêmios, temporada atual), limites do mapa e
+  Ilha do Ranking (portais e placares dentro da ilha, longe das outras).
+- `python3 tools/preview/novidades_servidor_test.py` — os SERVIÇOS de verdade num mini-Roblox: captura de shiny (aviso para
+  todos), EvolveService, AccessoryService (comprar/usar/tirar), SeasonPassService (estrelas, resgatar, premium), ClanService
+  (criar por 5.000, convidar, aceitar, sair, expulsar, limite 20, sigla em cima da cabeça), troca (confirmação zera quando
+  muda, valor dos cachorros) e doação (total, título, agradecimento).
+- `python3 tools/preview/catch_test.py` também confere 2x captura do evento, bônus de acessório e shiny preservado.
+- Ilhas: `python3 tools/preview/islands_dump.py saida.json rank` (Ilha do Ranking; `main`/`village` mostram os portais).

@@ -3,6 +3,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { chromium } = require('/opt/node22/lib/node_modules/playwright');
+// (o Chromium do ambiente muda de versão: usa o primeiro que existir; nenhum = o padrão do Playwright)
+const CHROME = ['/opt/pw-browsers/chromium-1194/chrome-linux/chrome', '/opt/pw-browsers/chromium-1243/chrome-linux64/chrome'].find((p) => require('fs').existsSync(p));
 const [, , dumpPath, output] = process.argv;
 const dir = __dirname;
 const dump = JSON.parse(fs.readFileSync(dumpPath, 'utf8'));
@@ -18,7 +20,7 @@ const server = http.createServer((req, res) => {
 });
 server.listen(0, '127.0.0.1', async () => {
   const port = server.address().port;
-  const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium-1194/chrome-linux/chrome', args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+  const browser = await chromium.launch({ executablePath: CHROME, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
   try {
     const phone = dump.screen.Touch;
     const page = await browser.newPage({ viewport: { width: dump.screen.W, height: dump.screen.H }, deviceScaleFactor: phone ? 2 : 1 });

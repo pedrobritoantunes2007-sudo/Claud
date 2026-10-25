@@ -347,6 +347,17 @@ try {
     @{ Key = 'DivineDog'; Type = 'Product'; Price = 399; Name = 'Sunfire Dragon (DIVINE)'; Desc = 'The only DIVINE dog! Fire + Light + Fly, Sunfire Breath and the DIVINE SUNFIRE Supreme.' }
     @{ Key = 'CashRush'; Type = 'Product'; Price = 39; Name = 'Cash Rush (30 min)'; Desc = '2x Cash for 30 minutes of play (on top of the 2x Cash pass!). Buy again to add more time.' }
     @{ Key = 'LuckRush'; Type = 'Product'; Price = 39; Name = 'Lucky Rush (30 min)'; Desc = 'Extra catch luck for 30 minutes of play (adds to Lucky Paw!). Buy again to add more time.' }
+    @{ Key = 'SeasonPass'; Type = 'Product'; Price = 199; Name = 'SEASON PASS'; Desc = 'Unlock the PREMIUM track of this season: way more rewards, 2 season accessories and the EXCLUSIVE season dog at level 30!' }
+    @{ Key = 'Acc_crown'; Type = 'Product'; Price = 99; Name = 'Royal Crown'; Desc = 'A golden crown with jewels for your dog: +10% Cash forever! Everyone sees it.' }
+    @{ Key = 'Acc_galaxy'; Type = 'Product'; Price = 129; Name = 'Galaxy Cape'; Desc = 'A starry galaxy cape for your dog: +8% speed forever! Everyone sees it.' }
+    @{ Key = 'Acc_diamond'; Type = 'Product'; Price = 79; Name = 'Diamond Collar'; Desc = 'A sparkling diamond collar for your dog: +8% catch chance forever! Everyone sees it.' }
+    @{ Key = 'Acc_visor'; Type = 'Product'; Price = 69; Name = 'Star Visor'; Desc = 'A glowing star visor for your dog: +10% XP forever! Everyone sees it.' }
+    @{ Key = 'Donate10'; Type = 'Product'; Price = 10; Name = 'Donate 10 Robux'; Desc = 'Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)' }
+    @{ Key = 'Donate25'; Type = 'Product'; Price = 25; Name = 'Donate 25 Robux'; Desc = 'Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)' }
+    @{ Key = 'Donate50'; Type = 'Product'; Price = 50; Name = 'Donate 50 Robux'; Desc = 'Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)' }
+    @{ Key = 'Donate100'; Type = 'Product'; Price = 100; Name = 'Donate 100 Robux'; Desc = 'Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)' }
+    @{ Key = 'Donate500'; Type = 'Product'; Price = 500; Name = 'Donate 500 Robux'; Desc = 'Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)' }
+    @{ Key = 'Donate1000'; Type = 'Product'; Price = 1000; Name = 'Donate 1000 Robux'; Desc = 'Support the creator of Dog Fighter Simulator! Thank you SO much! (no in-game items)' }
     )
     foreach ($it in $items) {
         if ($ids[$it.Key]) { Say "   ja existe: $($it.Name) -> $($ids[$it.Key])" 'DarkGray'; continue }

@@ -19,6 +19,10 @@ Botão **SHOP** (ou o **+** do dinheiro). Abas na esquerda:
 - **DOGS & SPINS**: giros da roleta, Ovo de Cristal, Mítico aleatório e o Sunfire Dragon (Divino).
 - **BOOSTS**: turbinadas de 30 minutos (contam só com o jogador no jogo; comprar de novo soma mais tempo).
   Enquanto valem, aparece um chip pequeno com o tempo ao lado do SUPER BOSS.
+- **STYLE** (2026-10-25): os 4 acessórios especiais de Robux (os de Cash ficam na tela 🎩 STYLE do HUD).
+
+O **🎟️ Passe de Temporada** aparece em PASSES e na tela PASS do HUD. As **💖 doações** ficam numa tela só delas
+(botão de coração ao lado do SETTINGS), não na loja.
 
 ## Itens
 
@@ -47,6 +51,12 @@ Botão **SHOP** (ou o **+** do dinheiro). Abas na esquerda:
 | ☀️ Sunfire Dragon (`DivineDog`) | Produto | 399 | O único Divino |
 | 💵 Cash Rush (`CashRush`) — NOVO | Produto | 39 | 2x Cash por 30 min (soma com o passe 2x Cash) |
 | 🍀 Lucky Rush (`LuckRush`) — NOVO | Produto | 39 | Mais sorte nos ovos por 30 min (soma com o Lucky Paw) |
+| 🎟️ SEASON PASS (`SeasonPass`) — 2026-10-25 | Produto | 199 | Trilha PREMIUM da temporada atual (30 dias): mais prêmios, 2 acessórios da temporada e o cachorro EXCLUSIVO no nível 30. Comprar vale só para a temporada em que comprou |
+| 👑 Royal Crown (`Acc_crown`) — 2026-10-25 | Produto | 99 | Acessório chapéu: +10% Cash para sempre (todo mundo vê) |
+| 🌌 Galaxy Cape (`Acc_galaxy`) — 2026-10-25 | Produto | 129 | Acessório capa: +8% velocidade para sempre |
+| 💎 Diamond Collar (`Acc_diamond`) — 2026-10-25 | Produto | 79 | Acessório coleira: +8% chance de captura para sempre |
+| ⭐ Star Visor (`Acc_visor`) — 2026-10-25 | Produto | 69 | Acessório óculos: +10% XP para sempre |
+| 💖 Donate 10/25/50/100/500/1000 (`Donate10` … `Donate1000`) — 2026-10-25 | Produto | 10 a 1000 | DOAÇÃO para o criador: não dá item no jogo, só o título 💖 Supporter (500+ Super Supporter, 2500+ Legendary Supporter), o agradecimento para o servidor e a lista TOP SUPPORTERS |
 
 O preço **de verdade** é o do site: a loja lê o preço do site sozinha quando o item já existe.
 Onde a lei proíbe itens pagos aleatórios (PolicyService), somem os giros, ovos, Mítico aleatório e a sorte.

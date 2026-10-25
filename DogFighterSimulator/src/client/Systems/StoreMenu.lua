@@ -677,7 +677,9 @@ function StoreMenu.Start(HUD)
 	if purchased then
 		purchased.OnClientEvent:Connect(function(key)
 			local item = Monetization.ByKey[key]
-			if item then
+			if item and item.Tab == "donate" then
+				HUD.Banner("💖 THANK YOU!", item.Emoji .. " " .. string.upper(item.Nome), "You're helping the game grow!", C.Pink)
+			elseif item then
 				HUD.Banner("⭐ SHOP", item.Emoji .. " " .. string.upper(item.Nome), "Thanks for your purchase!", C.Gold)
 				for _, entry in ipairs(entries) do
 					if entry.Item == item then

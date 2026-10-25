@@ -55,6 +55,7 @@ local REMOTES = {
 	SeasonAction = "RemoteFunction", -- 🎟️ ("claim", nível, "free"|"premium") | ("claimall") -> ok, mensagem (Services/SeasonPassService)
 	ClanAction = "RemoteFunction", -- 🐺 ("state"|"create"|"invite"|"accept"|"decline"|"join"|"leave"|"kick"|"open", ...) (Services/ClanService)
 	ClanEvent = "RemoteEvent", -- 🐺 servidor -> cliente: ("invite", convite) | ("changed")
+	DonateAction = "RemoteFunction", -- 💖 ("state") -> ok, { Total, Top } (Services/DonationService)
 }
 
 -- 🐶 o personagem do jogador é o cachorro (DogService põe o modelo em player.Character). O avatar do
@@ -188,6 +189,10 @@ step("EventService", function()
 end)
 step("MonetizationService", function()
 	MonetizationService.Start(remotes)
+end)
+-- 💖 doações para o criador (botão DONATE do HUD)
+step("DonationService", function()
+	require(Services.DonationService).Start(remotes)
 end)
 step("LeaderboardService", function()
 	require(Services.LeaderboardService).Start()

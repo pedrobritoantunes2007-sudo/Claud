@@ -1157,7 +1157,7 @@ local EMOJI = {
 	["🔑"] = "key",
 	["🎟"] = "ticket", ["🎫"] = "ticket",
 	["🎩"] = "hat", ["🧢"] = "hat", ["🧬"] = "sparkle", ["🌧"] = "cloud", ["🥇"] = "medal",
-	["🔒"] = "lock", ["🔓"] = "lock",
+	["🔒"] = "lock", ["🔓"] = "lock", ["🚩"] = "flag",
 	["⚙"] = "gear", ["🚧"] = "gear", ["🛠"] = "gear", ["🖥"] = "gear",
 	["🤝"] = "trade", ["🔄"] = "trade",
 	["⚔"] = "sword", ["🗡"] = "sword", ["🏟"] = "sword",

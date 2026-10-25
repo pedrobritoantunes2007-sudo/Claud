@@ -102,6 +102,8 @@ game = {
 }
 workspace = Instance.new("Folder")
 workspace.Name = "Workspace"
+-- (2026-10-25) o evento de fim de semana segue o relógio de verdade: o teste desliga para as contas ficarem fixas
+workspace:SetAttribute("EventForce", "off")
 
 ---------------------------------------------------------------- serviços do servidor falsos
 local profiles = {}
@@ -137,13 +139,13 @@ local FakeData = {
 	GiveXP = function(p, n)
 		table.insert(xp, { p, n })
 	end,
-	AddDog = function(p, speciesId, name, level)
+	AddDog = function(p, speciesId, name, level, extra)
 		local data = profiles[p]
 		if dogCount(data) >= (data.Max or 50) then
 			return nil, "Kennel full! Release a dog first."
 		end
 		local uid = "d" .. tostring(dogCount(data) + 1)
-		local dog = { Id = uid, Species = speciesId, Name = name or speciesId, Level = level or 1, XP = 0 }
+		local dog = { Id = uid, Species = speciesId, Name = name or speciesId, Level = level or 1, XP = 0, Shiny = extra and extra.Shiny or nil }
 		data.Dogs[uid] = dog
 		return dog
 	end,
@@ -379,6 +381,40 @@ ROLL = 0.999
 ok, msg = catch(alice, "throw", "Normal", champ.Id)
 check(ok and math.abs(msg.Chance - Config.CatchChance("Common", 0.1, 1, 3 - 2, 0, true)) < 1e-9, "campeão vencido: pode tentar (chance menor)")
 flush()
+
+-- 🎉 (2026-10-25) fim de semana 2x CATCH dobra a chance · 🎩 acessório de captura soma
+CLOCK += 5
+workspace:SetAttribute("EventForce", "Catch2x")
+local w6 = wild(common, { Health = 60, Level = 2 })
+ROLL = 0.999
+ok, msg = catch(alice, "throw", "Normal", w6.Id)
+check(ok and math.abs(msg.Chance - Config.CatchChance("Common", 0.6, 1, 0, 0, false, 2)) < 1e-9, "2x CATCH: chance em dobro")
+flush()
+CLOCK += 5
+workspace:SetAttribute("EventForce", "off")
+profiles[alice].Acc = { Owned = { bell = true }, On = { Collar = "bell" } }
+local w7 = wild(common, { Health = 60, Level = 2 })
+ok, msg = catch(alice, "throw", "Normal", w7.Id)
+check(ok and math.abs(msg.Chance - Config.CatchChance("Common", 0.6, 1, 0, 0, false, 1.04)) < 1e-9, "acessório Golden Bell: +4% de chance")
+profiles[alice].Acc = nil
+flush()
+
+-- ✨ selvagem SHINY capturado continua shiny
+CLOCK += 5
+ROLL = 0
+local w8 = wild(common, { Health = 5, Level = 3 })
+w8.Variant = { Shiny = true }
+ok, msg = catch(alice, "throw", "Normal", w8.Id)
+check(ok and msg.Success and msg.Shiny == true, "shiny: a coleira sabe que é shiny")
+flush()
+local gotShiny = nil
+for _, d in pairs(profiles[alice].Dogs) do
+	if d.Shiny then
+		gotShiny = d
+	end
+end
+check(gotShiny ~= nil and gotShiny.Level == 3, "shiny capturado entrou no canil AINDA shiny")
+check(noted(alice, "SHINY"), "aviso SHINY GOTCHA")
 
 -- chefão não pode
 if bossId then

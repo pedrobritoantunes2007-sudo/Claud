@@ -17,6 +17,52 @@
 - IDs do jogo: `publicar_ids.json`.
 
 ## Estado atual (últimas mudanças)
+- 🌊🏆✨ LOTE 2026-10-25 (10 pedidos do dono + "crie um HUD donation, onde os jogadores podem doar robux para mim").
+  Nada disso foi testado dentro do Roblox ainda: pedir prints. Códigos do dono (botão 🎟️ CODES) para testar:
+  `eventcatch2x` / `eventcash2x` / `eventrain` / `eventoff` / `eventauto`, `shiny`, `triplo`, `stars`.
+  - 🌊 MAR (bug): água no retângulo do mundo inteiro (`Layout.WORLD`: X −4400..4400, Z −5600..6800 + 1200 de mar)
+    em blocos de 2048 (`MapBuilder.buildWater`), CHÃO invisível no fundo (Y −20) e 4 PAREDES invisíveis
+    (`MapBuilder.BuildLimits` → workspace "Limites"). `IslandService` resgata quem cair abaixo de Y −60 ou sair das
+    paredes (volta para a ilha aberta/vila/ranking/principal).
+  - 🏆 ILHA DO RANKING (`Shared/RankIsland`, `World/RankIsland.lua`, centro 0,0,−4300): os 6 PLACARES só ficam lá
+    (`LeaderboardService` reescrito): Strongest, Weekly Wins, Most Catches, Most Complete Dex, Best Clans (semana) e
+    Season Pass. Portais: praça da ilha principal (`MainIsland.RankPortalCFrame`, ângulo 120°) e Pawville
+    (`RankIsland.VILLAGE_PORTAL`, ao lado do fim da rua principal, placa 🏆 RANKING na seta). O chip da ilha no HUD mostra o nome dela.
+  - ✨ SHINY (`Shared/Variants`): 1 em 500 selvagens nasce shiny (brilho + cor), aviso para o servidor inteiro, continua
+    shiny quando capturado (`dog.Shiny`), +15% de força. 🧬 EVOLUIR (`Services/EvolveService`, botão EVOLVE no DOGS):
+    3 iguais (mesma espécie e mesma versão) → 1 GOLD (×1.6); 3 GOLD → 1 RAINBOW (×2.5). O novo fica com o MAIOR level
+    dos 3 e é shiny se algum era; favoritos ⭐ (fora o escolhido) e cachorros oferecidos numa troca ficam de fora; o
+    equipado pode entrar (não no meio de uma luta). `dog.Tier` = "Gold"/"Rainbow". Venda/troca × `Variants.ValueMult`.
+  - 📖 DEX COM PRÊMIOS (`Shared/DexRewards`): 10/25/50 descobertos e cada raridade completa dão coleiras, giros, Cash e
+    TÍTULOS (painel no DEX; títulos novos "x:<nome>" em `data.ExtraTitles`).
+  - 🎩 ACESSÓRIOS (`Shared/Accessories`, `Services/AccessoryService`, tela `Systems/StyleMenu`, botão STYLE): chapéu,
+    coleira, óculos e capa no cachorro (todo mundo vê, `Accessories.Attach`), bônus pequeno (Cash, XP, captura,
+    velocidade; soma no máximo 30%). 16 com Cash; 4 com Robux (`Acc_crown` 99, `Acc_galaxy` 129, `Acc_diamond` 79,
+    `Acc_visor` 69); 2 do Passe de Temporada.
+  - 🎉 EVENTOS DE FIM DE SEMANA (`Shared/WeekendEvents`, `Services/EventService`, chip `Systems/WeekendEvent`): sábado
+    00:00 até segunda 00:00 (Brasília), revezando 2x CAPTURE / 2x CASH / CHUVA DE RAROS (cachorros raros caindo nas
+    ilhas com gente). Atributo `EventForce` do workspace força um (códigos acima).
+  - 🎟️ PASSE DE TEMPORADA (`Shared/SeasonPass`, `Services/SeasonPassService`, tela `Systems/SeasonPassMenu`, botão
+    PASS): 30 dias, 30 níveis (10 ⭐ por nível), estrelas de missões, login, capturas e evoluções
+    (`SeasonPass.STARS`), trilha FREE e PREMIUM.
+    Premium = produto `SeasonPass` 199 Robux (vale só para a temporada atual); nível 30 premium dá o exclusivo
+    `aurora_pup` (Mítico, `DogPacks/PackF`, poderes do frost_phoenix em `SpecialsPacks/Skills_Season`; não sai em
+    ovo/roleta/selvagem: `Exclusive = true`). Temporada 1 "Aurora Season" começa em 2026-10-25 00:00 (Brasília).
+  - 🚩 CLÃS (`Services/ClanService`, tela `Systems/ClanMenu`, botão CLAN): criar por 5.000 Cash (`Config.CLAN`), até 20,
+    convidar/aceitar, aberto ou só convite, sair, expulsar (líder), sigla [TAG] colorida em cima da cabeça, pontos da
+    semana (vitória 1, captura 3, missão 5) no placar Best Clans. DataStores `DogClans_v1`/`DogClanNames_v1`,
+    avisos entre servidores pelo MessagingService.
+  - 🤝 TROCAS MELHORES (`TradeService` + `Systems/Trade`): os 2 confirmam, qualquer mudança zera a confirmação, mostra o
+    valor de cada cachorro e o total de cada lado, destaque para shiny/GOLD/RAINBOW.
+  - 💖 DOAÇÃO (`Services/DonationService`, tela `Systems/DonateMenu`, botão de coração ao lado do SETTINGS): produtos
+    `Donate10/25/50/100/500/1000` (não dão item no jogo), título 💖 Supporter / Super Supporter (500) / Legendary
+    Supporter (2500), agradecimento para o servidor, chuva de corações, lista TOP SUPPORTERS (`TopDonors_v1`).
+  - Loja/publicar: `PUBLICAR.ps1` (lista `$items`) cria os 11 produtos novos; imagens em `Imagens/Loja/` (feitas com
+    `tools/preview/shop_images.py`, que agora aceita chave com "_"). Aba STYLE nova na loja.
+  - Testes novos: `tools/preview/novidades_test.luau` (regras: variantes, evoluir, Dex, acessórios, eventos, passe,
+    limites do mapa, ilha do ranking) e `tools/preview/novidades_servidor_test.py` (serviços com o mock: captura shiny,
+    evoluir, acessórios, passe, clãs, troca, doação). Prévia das telas: `tools/hud_preview/hud_dump.py` com as flags
+    `menuPass`, `menuStyle`, `menuClan` (+`clanmember`), `menuDonate`, `menuDogs,variants`, `event`.
 - 🎵🔊 2026-10-25 (o dono: "faz a música de novo e quero som para tudo, porque tem várias coisas sem som, faz o
   cachorro latir às vezes... algumas músicas, mas têm que ser viciantes, porque vão ficar horas no jogo"):
   - 🎵 TRILHA 2 (`Musica/gerar_trilha2.py`, usa os instrumentos do `gerar_musica.py`): Village, Sunny (Pawville),

@@ -291,11 +291,13 @@ for _, id in ipairs(MOCK_IDS) do
 	TERRAIN_COLS = {}
 	Deco.Count = 0
 	local modName = id:sub(1, 1):upper() .. id:sub(2)
-	-- 🏡 a Pawville (World/Village) não fica em Isles nem no Islands.List
+	-- 🏡 a Pawville (World/Village) e a 🏆 Ilha do Ranking (World/RankIsland) não ficam em Isles nem no Islands.List
 	local VillageData = require(ReplicatedStorage.Shared.Village)
+	local RankData = require(ReplicatedStorage.Shared.RankIsland)
 	local isVillage = id == VillageData.Id
-	local mod = isVillage and require(World.Village) or require(World.Isles[modName])
-	local def = isVillage and VillageData.Def or Islands.List[id]
+	local isRank = id == RankData.Id
+	local mod = isVillage and require(World.Village) or isRank and require(World.RankIsland) or require(World.Isles[modName])
+	local def = isVillage and VillageData.Def or isRank and RankData.Def or Islands.List[id]
 	local spec = mod.Spec(def)
 	spec.CF = def and def.CF or CFrame.new()
 	spec.Id = id

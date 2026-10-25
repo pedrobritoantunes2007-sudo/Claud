@@ -401,6 +401,17 @@ Monetization.Items = {
 		Recompensa = { Acessorio = "visor" },
 	},
 
+	---------------------------------------------------------------- 💖 DOAÇÕES PARA O CRIADOR (2026-10-25)
+	-- (pedido do dono: "crie um HUD donation, onde os jogadores podem doar robux para mim") — botão 💖 DONATE do HUD
+	-- (Systems/DonateMenu). Não dá nada no jogo (só o título 💖 Supporter, o agradecimento para o servidor inteiro e
+	-- o nome na lista TOP SUPPORTERS: Services/DonationService). Tab = "donate": não aparece nas abas da loja.
+	{ Key = "Donate10", Type = "Product", Id = 0, Preco = 10, Emoji = "💖", Icon = "heart", Badge = "10", Tab = "donate", Nome = "Donate 10 Robux", Descricao = "Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)", Recompensa = { Doacao = 10 } },
+	{ Key = "Donate25", Type = "Product", Id = 0, Preco = 25, Emoji = "💖", Icon = "heart", Badge = "25", Tab = "donate", Nome = "Donate 25 Robux", Descricao = "Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)", Recompensa = { Doacao = 25 } },
+	{ Key = "Donate50", Type = "Product", Id = 0, Preco = 50, Emoji = "💖", Icon = "heart", Badge = "50", Tab = "donate", Nome = "Donate 50 Robux", Descricao = "Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)", Recompensa = { Doacao = 50 } },
+	{ Key = "Donate100", Type = "Product", Id = 0, Preco = 100, Emoji = "💖", Icon = "heart", Badge = "100", Tab = "donate", Nome = "Donate 100 Robux", Descricao = "Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)", Recompensa = { Doacao = 100 } },
+	{ Key = "Donate500", Type = "Product", Id = 0, Preco = 500, Emoji = "💖", Icon = "heart", Badge = "500", Tab = "donate", Nome = "Donate 500 Robux", Descricao = "Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)", Recompensa = { Doacao = 500 } },
+	{ Key = "Donate1000", Type = "Product", Id = 0, Preco = 1000, Emoji = "💖", Icon = "heart", Badge = "1000", Tab = "donate", Nome = "Donate 1000 Robux", Descricao = "Support the creator of Dog Fighter Simulator! Thank you SO much! (no in-game items)", Recompensa = { Doacao = 1000 } },
+
 	---------------------------------------------------------------- ⏱️ TURBINADAS (30 min, somam)
 	{
 		Key = "CashRush",
@@ -465,6 +476,12 @@ Monetization.IDS = {
 	Acc_galaxy = 0 --[[ID]],
 	Acc_diamond = 0 --[[ID]],
 	Acc_visor = 0 --[[ID]],
+	Donate10 = 0 --[[ID]],
+	Donate25 = 0 --[[ID]],
+	Donate50 = 0 --[[ID]],
+	Donate100 = 0 --[[ID]],
+	Donate500 = 0 --[[ID]],
+	Donate1000 = 0 --[[ID]],
 }
 for _, item in ipairs(Monetization.Items) do
 	local id = Monetization.IDS[item.Key]

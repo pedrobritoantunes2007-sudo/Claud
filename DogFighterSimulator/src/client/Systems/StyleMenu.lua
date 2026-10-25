@@ -86,7 +86,7 @@ function StyleMenu.Start(HUD)
 	Kit.Corner(grid, 14)
 	Kit.Stroke(grid, C.Dark, 2)
 	make("UIPadding", { PaddingLeft = UDim.new(0, 10), PaddingRight = UDim.new(0, 18), PaddingTop = UDim.new(0, 10), PaddingBottom = UDim.new(0, 10) }, grid)
-	make("UIGridLayout", { CellSize = UDim2.new(0.31, 0, 0, 190), CellPadding = UDim2.new(0.035, 0, 0, 12), SortOrder = Enum.SortOrder.LayoutOrder }, grid)
+	make("UIGridLayout", { CellSize = UDim2.new(0.3, 0, 0, 190), CellPadding = UDim2.new(0.035, 0, 0, 12), SortOrder = Enum.SortOrder.LayoutOrder }, grid)
 
 	-- o que o cachorro está usando + o experimentado
 	local function outfit()

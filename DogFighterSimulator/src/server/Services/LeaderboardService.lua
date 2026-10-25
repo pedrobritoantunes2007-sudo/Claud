@@ -333,8 +333,8 @@ local BOARDS = {
 	Dex = { Title = "📖 BEST DEX", Color = Color3.fromRGB(180, 110, 255), Footer = "Dog species discovered", Fmt = function(v)
 		return "📖 " .. Config.Format(v)
 	end },
-	Clans = { Title = "🐺 BEST CLANS (WEEK)", Color = Color3.fromRGB(255, 110, 110), Fmt = function(v)
-		return "🐺 " .. Config.Format(v)
+	Clans = { Title = "🚩 BEST CLANS (WEEK)", Color = Color3.fromRGB(255, 110, 110), Fmt = function(v)
+		return "🚩 " .. Config.Format(v)
 	end },
 	Season = { Title = "🎟️ SEASON PASS", Color = Color3.fromRGB(90, 220, 210), Fmt = function(v)
 		local level = SeasonPass.LevelOf(v)

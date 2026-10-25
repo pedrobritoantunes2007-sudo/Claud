@@ -184,8 +184,8 @@ o cachorro sobe de nível e LIBERA OS PODERES (Lv.10 / 25 / 50) → ABRIR A PRÓ
 - 77 cães, 6 raridades (19 Míticos).
 - **Bosses (2026-10)**: ESCADA de 12 chefes na torre (topo raio 120; `data.BossBeaten` libera o próximo), lacaios nas fases, círculo vermelho de aviso que explode a cada 4–8 s; **🌍 Boss do Mundo** (`WorldBoss.lua`): a cada 10 min um chefe gigante na Arena, todos lutam juntos, sempre um dos 3 últimos chefes, gigante (escala 2,2), vida 12+6 por jogador × a do chefe, dano 3x, couraça (−40% dano), círculos de explosão em todos a cada 4 s e onda gigante a cada 30 s, prêmio 5x, some em 8 min. Cada chefe da torre tem CENÁRIO próprio (`BossArenas.lua`: gelo, lava, vazio, oceano, arcano, inferno, cosmos...).
 - Abrir muitos ovos: grade de 10 + CONTINUE + SKIP ALL laranja fixo embaixo.
-- TRADE (botão 🤝): até 6 cães por lado, READY dos dois + contagem de 5 s, qualquer mudança tira o READY; sem equipado/favoritos.
-- Rankings globais na praça: Strongest Players e Most Wins This Week (zera segunda 00:00 UTC).
+- TRADE (botão 🤝): até 6 cães por lado, READY dos dois + contagem de 5 s, qualquer mudança tira o READY; sem equipado/favoritos. 2026-10-25: mostra o valor de cada cão e o total de cada lado, destaque shiny/GOLD/RAINBOW.
+- Rankings globais: desde 2026-10-25 só na 🏆 ILHA DO RANKING (ver 6c), 6 placares.
 - Missões/conquistas/login diário, tutorial visual (10 passos, prêmio $500), Settings (gráficos/música/efeitos), música e SFX (1 áudio com pedaços).
 - Gamepasses: 2x Cash, 2x XP, **Fast Training** (era Fast Eggs — RENOMEAR no site), Auto Collect (SEM EFEITO até virar Auto Buy Egg), Auto Hatch, VIP, Starter Pack.
   Produtos: Cash pequeno/médio/grande, Crystal Egg, Random Mythic Dog (aleatórios bloqueados por PolicyService).
@@ -231,6 +231,18 @@ o cachorro sobe de nível e LIBERA OS PODERES (Lv.10 / 25 / 50) → ABRIR A PRÓ
   `Landmarks.Build` (desvia dos marcos/árvores por uma grade das peças). Bichinhos: tags `Hopper` (coelho, galinha, ovelha, sapo,
   pinguim, caranguejo, lagartixa, gosma) e `Leaper` (peixe pulando) no `WorldMotion`. Escada do mirante é TrussPart (dá para subir).
 - **Prévia sem Roblox**: `python3 tools/preview/islands_dump.py saida.json <ilha|main>` + `node tools/preview/islands_render.js` (PNG).
+
+## 6c. 🌊🏆✨ NOVIDADES 2026-10-25 (10 pedidos do dono + doação)
+- 🌊 Mar no mundo inteiro (`Layout.WORLD`) + chão e paredes invisíveis + resgate de quem cair/sair (`MapBuilder`, `IslandService`).
+- 🏆 Ilha do Ranking (`Shared/RankIsland`, `World/RankIsland`): portais na praça da ilha principal e na Pawville; placares Strongest, Weekly Wins, Most Catches, Most Complete Dex, Best Clans (semana) e Season Pass.
+- ✨ Shiny 1/500 (aviso no servidor, +15%) e 🧬 EVOLUIR: 3 iguais → GOLD (×1.6), 3 GOLD → RAINBOW (×2.5) (`Shared/Variants`, `EvolveService`).
+- 📖 Dex com prêmios: 10/25/50 descobertos e raridade completa → coleiras, giros, Cash e títulos (`Shared/DexRewards`).
+- 🎩 Acessórios (chapéu, coleira, óculos, capa; todos veem; bônus pequeno; Cash, 4 de Robux, 2 do passe) (`Shared/Accessories`, tela STYLE).
+- 🎉 Eventos de fim de semana automáticos (sáb–dom, Brasília): 2x captura, 2x Cash, chuva de raros, revezando (`Shared/WeekendEvents`).
+- 🎟️ Passe de Temporada: 30 dias, 30 níveis, FREE + PREMIUM (199 Robux por temporada), cão exclusivo `aurora_pup` no nível 30 premium.
+- 🚩 Clãs: 5.000 Cash, até 20, convite/entrar/sair/expulsar, [TAG] em cima da cabeça, ranking semanal (`ClanService`, tela CLAN).
+- 💖 Doação para o criador: 10/25/50/100/500/1000 Robux, título Supporter, chuva de corações, TOP SUPPORTERS (`DonationService`).
+- Detalhes, arquivos e testes: `LEIA_PRIMEIRO_CONTINUAR.md` (Estado atual) e `tools/preview/LEIAME.md`.
 
 ## 7. Mapa dos arquivos (onde mexer)
 | Assunto | Arquivo |

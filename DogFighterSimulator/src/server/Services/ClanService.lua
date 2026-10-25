@@ -233,7 +233,7 @@ local function refreshMembers(id, rec)
 				applyTag(p, rec)
 			else
 				setMine(p, nil)
-				remotes.Notify:FireClient(p, "🐺 You are no longer in that clan.", "red")
+				remotes.Notify:FireClient(p, "🚩 You are no longer in that clan.", "red")
 			end
 			remotes.ClanEvent:FireClient(p, "changed")
 		end
@@ -348,10 +348,10 @@ local function create(player, name, tag, color)
 	DataService.SaveNow(player)
 	for _, p in ipairs(Players:GetPlayers()) do
 		if p ~= player then
-			remotes.Notify:FireClient(p, "🐺 " .. player.DisplayName .. " created the clan [" .. ftag .. "] " .. fname .. "!", "blue")
+			remotes.Notify:FireClient(p, "🚩 " .. player.DisplayName .. " created the clan [" .. ftag .. "] " .. fname .. "!", "blue")
 		end
 	end
-	return true, "🐺 Clan [" .. ftag .. "] " .. fname .. " created! Invite your friends."
+	return true, "🚩 Clan [" .. ftag .. "] " .. fname .. " created! Invite your friends."
 end
 
 -- entra no clã (aceitou convite ou clã aberto)
@@ -398,9 +398,9 @@ local function joinClan(player, id, viaInvite)
 	setMine(player, rec)
 	DataService.SaveNow(player)
 	invites[player] = nil
-	tellMembers(id, "🐺 " .. player.DisplayName .. " joined the clan!", "green", player)
+	tellMembers(id, "🚩 " .. player.DisplayName .. " joined the clan!", "green", player)
 	publish({ K = "upd", C = id })
-	return true, "🐺 Welcome to [" .. rec.Tag .. "] " .. rec.Name .. "!"
+	return true, "🚩 Welcome to [" .. rec.Tag .. "] " .. rec.Name .. "!"
 end
 
 -- tira um membro do registro (sair ou expulsar). O dono que sai passa o clã para o mais antigo; sem ninguém, desfaz.
@@ -456,7 +456,7 @@ local function leave(player)
 	DataService.SaveNow(player)
 	if rec then
 		refreshMembers(id, rec)
-		tellMembers(id, "🐺 " .. player.DisplayName .. " left the clan.", "orange")
+		tellMembers(id, "🚩 " .. player.DisplayName .. " left the clan.", "orange")
 	end
 	publish({ K = "upd", C = id })
 	return true, "You left the clan."
@@ -486,7 +486,7 @@ local function kick(player, userId)
 	local target = Players:GetPlayerByUserId(userId)
 	if target then
 		setMine(target, nil)
-		remotes.Notify:FireClient(target, "🐺 You were removed from [" .. rec.Tag .. "] " .. rec.Name .. ".", "red")
+		remotes.Notify:FireClient(target, "🚩 You were removed from [" .. rec.Tag .. "] " .. rec.Name .. ".", "red")
 		remotes.ClanEvent:FireClient(target, "changed")
 	else
 		publish({ K = "kick", C = id, U = userId })
@@ -556,7 +556,7 @@ local function invite(player, target)
 	local inv = { Id = id, Name = rec.Name, Tag = rec.Tag, From = player.DisplayName, Until = os.clock() + C.InviteTime }
 	invites[target][id] = inv
 	remotes.ClanEvent:FireClient(target, "invite", { Id = id, Name = rec.Name, Tag = rec.Tag, From = player.DisplayName })
-	return true, "🐺 Invite sent to " .. target.DisplayName .. "!"
+	return true, "🚩 Invite sent to " .. target.DisplayName .. "!"
 end
 
 local function accept(player, id)
@@ -662,7 +662,7 @@ local function onLoaded(player, data)
 	elseif rec ~= nil or cache[id] then
 		-- (registro lido e ele não está mais lá) — se o DataStore falhou, deixa como está
 		setMine(player, nil)
-		remotes.Notify:FireClient(player, "🐺 You are no longer in your old clan.", "orange")
+		remotes.Notify:FireClient(player, "🚩 You are no longer in your old clan.", "orange")
 	end
 end
 
@@ -773,7 +773,7 @@ function ClanService.Start(r)
 					local target = Players:GetPlayerByUserId(tonumber(m.U) or 0)
 					if target and target:GetAttribute("ClanId") == m.C then
 						setMine(target, nil)
-						remotes.Notify:FireClient(target, "🐺 You were removed from your clan.", "red")
+						remotes.Notify:FireClient(target, "🚩 You were removed from your clan.", "red")
 						remotes.ClanEvent:FireClient(target, "changed")
 					end
 				elseif m.K == "upd" then

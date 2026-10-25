@@ -260,3 +260,126 @@ Descrição:
 Extra luck for 30 minutes of play: eggs AND catching (adds to Lucky Paw!). Buy again to add more time.
 ```
 Imagem: `Imagens/Loja/LuckRush.png`
+
+<!-- 2026-10-25: passe de temporada, acessórios especiais e doações -->
+
+## SEASON PASS — Produto — 199 Robux (chave `SeasonPass`)
+Nome:
+```
+SEASON PASS
+```
+Descrição:
+```
+Unlock the PREMIUM track of this season: way more rewards, 2 season accessories and the EXCLUSIVE season dog at level 30!
+```
+Imagem: `Imagens/Loja/SeasonPass.png`
+
+## Royal Crown — Produto — 99 Robux (chave `Acc_crown`)
+Nome:
+```
+Royal Crown
+```
+Descrição:
+```
+A golden crown with jewels for your dog: +10% Cash forever! Everyone sees it.
+```
+Imagem: `Imagens/Loja/Acc_crown.png`
+
+## Galaxy Cape — Produto — 129 Robux (chave `Acc_galaxy`)
+Nome:
+```
+Galaxy Cape
+```
+Descrição:
+```
+A starry galaxy cape for your dog: +8% speed forever! Everyone sees it.
+```
+Imagem: `Imagens/Loja/Acc_galaxy.png`
+
+## Diamond Collar — Produto — 79 Robux (chave `Acc_diamond`)
+Nome:
+```
+Diamond Collar
+```
+Descrição:
+```
+A sparkling diamond collar for your dog: +8% catch chance forever! Everyone sees it.
+```
+Imagem: `Imagens/Loja/Acc_diamond.png`
+
+## Star Visor — Produto — 69 Robux (chave `Acc_visor`)
+Nome:
+```
+Star Visor
+```
+Descrição:
+```
+A glowing star visor for your dog: +10% XP forever! Everyone sees it.
+```
+Imagem: `Imagens/Loja/Acc_visor.png`
+
+## Donate 10 Robux — Produto — 10 Robux (chave `Donate10`)
+Nome:
+```
+Donate 10 Robux
+```
+Descrição:
+```
+Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)
+```
+Imagem: `Imagens/Loja/Donate10.png`
+
+## Donate 25 Robux — Produto — 25 Robux (chave `Donate25`)
+Nome:
+```
+Donate 25 Robux
+```
+Descrição:
+```
+Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)
+```
+Imagem: `Imagens/Loja/Donate25.png`
+
+## Donate 50 Robux — Produto — 50 Robux (chave `Donate50`)
+Nome:
+```
+Donate 50 Robux
+```
+Descrição:
+```
+Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)
+```
+Imagem: `Imagens/Loja/Donate50.png`
+
+## Donate 100 Robux — Produto — 100 Robux (chave `Donate100`)
+Nome:
+```
+Donate 100 Robux
+```
+Descrição:
+```
+Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)
+```
+Imagem: `Imagens/Loja/Donate100.png`
+
+## Donate 500 Robux — Produto — 500 Robux (chave `Donate500`)
+Nome:
+```
+Donate 500 Robux
+```
+Descrição:
+```
+Support the creator of Dog Fighter Simulator! Thank you! (no in-game items)
+```
+Imagem: `Imagens/Loja/Donate500.png`
+
+## Donate 1000 Robux — Produto — 1000 Robux (chave `Donate1000`)
+Nome:
+```
+Donate 1000 Robux
+```
+Descrição:
+```
+Support the creator of Dog Fighter Simulator! Thank you SO much! (no in-game items)
+```
+Imagem: `Imagens/Loja/Donate1000.png`

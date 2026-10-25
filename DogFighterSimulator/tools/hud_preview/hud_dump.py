@@ -85,7 +85,8 @@ parts.append(module('Starter', os.path.join(SRC, 'client', 'Systems', 'Starter.l
 parts.append(module('MusicConfig', os.path.join(SRC, 'shared', 'MusicConfig.lua')))
 # 🎨 menus (flag "menu<Nome>": abre o menu de verdade por cima do HUD, ex.: menuDogs, menuInventario, menuLoja)
 MENU_UI = ['DogsMenu', 'MapMenu', 'ShopMenu', 'Hatch']
-MENU_SYS = ['Inventory', 'StoreMenu', 'Progression', 'Settings', 'Codes', 'Trade', 'Quests', 'Catch']
+MENU_SYS = ['Inventory', 'StoreMenu', 'Progression', 'Settings', 'Codes', 'Trade', 'Quests', 'Catch',
+            'SeasonPassMenu', 'StyleMenu', 'ClanMenu', 'DonateMenu', 'WeekendEvent']  # (2026-10-25: telas novas)
 for name in MENU_UI:
     parts.append(module(name, os.path.join(SRC, 'client', 'UI', name + '.lua')))
 for name in MENU_SYS:
@@ -134,7 +135,7 @@ for _, n in ipairs({ "DogsMenu", "MapMenu", "ShopMenu", "Hatch" }) do
 	ms(n, ui)
 end
 local systems = folder("Systems", client)
-for _, n in ipairs({ "Inventory", "StoreMenu", "Progression", "Settings", "Codes", "Trade", "Quests", "Catch" }) do
+for _, n in ipairs({ "Inventory", "StoreMenu", "Progression", "Settings", "Codes", "Trade", "Quests", "Catch", "SeasonPassMenu", "StyleMenu", "ClanMenu", "DonateMenu", "WeekendEvent" }) do
 	ms(n, systems)
 end
 ms("Abilities", systems)
@@ -215,7 +216,19 @@ PROFILE = {
 	Streak = 0,
 	Leashes = { Normal = 4, Golden = 1 },
 	LeashGift = not FLAGS.leashgift,
+	-- (2026-10-25) 🎟️ passe da temporada atual · 🎩 acessórios
+	Season = { Id = 1, Stars = 47, Premium = FLAGS.premium == true, Free = { ["1"] = true, ["2"] = true }, Paid = {} },
+	Acc = { Owned = { cap = true, bowtie = true, shades = true }, On = { Hat = "cap", Collar = "bowtie" } },
+	Discovered = { caramelo = true, pug = true, beagle = true, corgi = true, poodle = true, bulldog = true, salsicha = true, chihuahua = true, pinscher = true, akita = true, snow_husky = true },
 }
+-- ✨🥇🌈 (flag "variants"): cachorros shiny / Gold / Rainbow no DOGS
+if FLAGS.variants then
+	PROFILE.Dogs[2] = { Id = 2, Species = "pug", Name = "Pug", Level = 8, XP = 0, Shiny = true }
+	PROFILE.Dogs[3] = { Id = 3, Species = "corgi", Name = "Corgi", Level = 15, XP = 0, Tier = 1 }
+	PROFILE.Dogs[4] = { Id = 4, Species = "beagle", Name = "Beagle", Level = 20, XP = 0, Tier = 2, Shiny = true }
+	PROFILE.Dogs[5] = { Id = 5, Species = "caramelo", Name = "Caramelo", Level = 4, XP = 0 }
+	PROFILE.Dogs[6] = { Id = 6, Species = "caramelo", Name = "Caramelo", Level = 6, XP = 0 }
+end
 MODULES.Net = function(script)
 	local Net = {}
 	Net.Remotes = remotes
@@ -228,7 +241,25 @@ MODULES.Net = function(script)
 		local p = Net.Profile
 		return p and p.Equipped and p.Dogs[p.Equipped]
 	end
-	function Net.Invoke()
+	-- (as telas novas pedem o estado ao servidor: respostas de mentirinha)
+	function Net.Invoke(remote, action)
+		if remote == "ClanAction" and action == "state" then
+			local s = { Cost = 5000, Max = 20, Colors = 8, Invites = {}, Browse = {} }
+			if FLAGS.clanmember then
+				s.Clan = { Id = "1-1", Name = "Super Pups", Tag = "SP", Color = 3, Open = true, Leader = true, Count = 4, Week = 1280, Members = {
+					{ UserId = 1, Name = "You", Leader = true, Online = true, Joined = 1 },
+					{ UserId = 2, Name = "Bruna", Leader = false, Online = true, Joined = 2 },
+					{ UserId = 3, Name = "Leo", Leader = false, Online = false, Joined = 3 },
+					{ UserId = 4, Name = "Mia", Leader = false, Online = false, Joined = 4 },
+				} }
+			else
+				s.Invites = { { Id = "7-1", Name = "Doggo Kings", Tag = "DK", From = "Bruna" } }
+				s.Browse = { { Id = "9-1", Name = "Paw Patrol", Tag = "PAW", Color = 4, Count = 12, Open = true } }
+			end
+			return true, s
+		elseif remote == "DonateAction" and action == "state" then
+			return true, { Total = 150, Top = { { Name = "Bruna", Amount = 1000 }, { Name = "Leo", Amount = 500 }, { Name = "You", Amount = 150 } } }
+		end
 		return true, ""
 	end
 	-- (contas iguais às do Net de verdade, para os menus)
@@ -723,6 +754,8 @@ local MENU_MODULE = {
 	Dogs = ui.DogsMenu, Map = ui.MapMenu, Shop = ui.ShopMenu, Inventario = systems.Inventory, Loja = systems.StoreMenu,
 	Missoes = systems.Progression, Settings = systems.Settings, Codes = systems.Codes, Trade = systems.Trade,
 	Coleiras = systems.Catch,
+	-- (2026-10-25) 🎟️ passe · 🎩 acessórios · 🐺 clãs · 💖 doações
+	Pass = systems.SeasonPassMenu, Style = systems.StyleMenu, Clan = systems.ClanMenu, Donate = systems.DonateMenu,
 }
 for flag in pairs(FLAGS) do
 	local name = string.match(flag, "^menu(%a+)$")
@@ -740,6 +773,17 @@ for flag in pairs(FLAGS) do
 		if not okM then
 			print("ERRO|menu " .. name .. "|" .. tostring(errM))
 		end
+	end
+end
+
+-- 🎉 "event": a pílula do evento de fim de semana (2x CATCH ligado pelo código de teste)
+if FLAGS.event then
+	workspace:SetAttribute("EventForce", "Catch2x")
+	local okE, errE = pcall(function()
+		require(systems.WeekendEvent).Start(HUD)
+	end)
+	if not okE then
+		print("ERRO|WeekendEvent|" .. tostring(errE))
 	end
 end
 
@@ -776,7 +820,7 @@ end
 -- (tools/preview/shop_images.py: a figura que o PUBLICAR.bat coloca no passe/produto do site do Roblox; o site mostra
 -- os passes num CÍRCULO, então tudo que importa fica no meio)
 for flag in pairs(FLAGS) do
-	local key = string.match(flag, "^shopicon_(%w+)$")
+	local key = string.match(flag, "^shopicon_([%w_]+)$")
 	if key then
 		local Monetization = require(shared.Monetization)
 		local Kit = require(ui.Kit)

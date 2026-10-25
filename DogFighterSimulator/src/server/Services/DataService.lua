@@ -571,6 +571,7 @@ local function sanitize(data)
 	data.Acc = { Owned = owned, On = on }
 	data.Catches = num(data.Catches, 0, 0)
 	data.Evolves = num(data.Evolves, 0, 0)
+	data.Donated = num(data.Donated, 0, 0) -- 💖 Robux doados para o criador (DonationService)
 	-- 🎟️ títulos ganhos fora das conquistas (Passe de Temporada)
 	local titles, nTitles = {}, 0
 	if type(data.ExtraTitles) == "table" then

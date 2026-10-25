@@ -98,7 +98,7 @@ end
 function ClanMenu.Start(HUD)
 	local menu = Kit.Menu({
 		Name = "ClanMenu",
-		Title = "🐺 CLANS",
+		Title = "🚩 CLANS",
 		Color = Color3.fromRGB(255, 110, 110),
 		Width = 940,
 		Height = 600,
@@ -127,7 +127,7 @@ function ClanMenu.Start(HUD)
 	---------------------------------------------------------- página: SEM CLÃ
 	local nonePage = make("Frame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, Visible = false, ZIndex = 2 }, body)
 	local create = Kit.Box(nonePage, { Size = UDim2.fromScale(0.48, 1) }, C.Panel)
-	Kit.Text(create, { Position = UDim2.fromScale(0.05, 0.03), Size = UDim2.fromScale(0.9, 0.1), Text = "🐺 CREATE A CLAN", Font = Kit.Title, TextColor3 = C.Gold })
+	Kit.Text(create, { Position = UDim2.fromScale(0.05, 0.03), Size = UDim2.fromScale(0.9, 0.1), Text = "🚩 CREATE A CLAN", Font = Kit.Title, TextColor3 = C.Gold })
 	Kit.Text(create, { Position = UDim2.fromScale(0.05, 0.15), Size = UDim2.fromScale(0.9, 0.06), Text = "Clan name (" .. CLAN.Name[1] .. "-" .. CLAN.Name[2] .. " letters)", TextColor3 = C.Muted })
 	local nameBox = textBox(create, { Position = UDim2.fromScale(0.05, 0.22), Size = UDim2.fromScale(0.9, 0.12) }, "Super Pups")
 	Kit.Text(create, { Position = UDim2.fromScale(0.05, 0.37), Size = UDim2.fromScale(0.9, 0.06), Text = "Tag above your head (" .. CLAN.Tag[1] .. "-" .. CLAN.Tag[2] .. " letters/numbers)", TextColor3 = C.Muted })
@@ -154,8 +154,8 @@ function ClanMenu.Start(HUD)
 			Text = "",
 			AutoButtonColor = true,
 			BackgroundColor3 = col,
-			Size = UDim2.fromScale(0.105, 1),
-			SizeConstraint = Enum.SizeConstraint.RelativeYY,
+			Size = UDim2.fromScale(0.105, 0.105),
+			SizeConstraint = Enum.SizeConstraint.RelativeXX,
 			BorderSizePixel = 0,
 		}, colorRow)
 		Kit.Corner(dot, 999)

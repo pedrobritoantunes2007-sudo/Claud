@@ -181,6 +181,9 @@ Checklist antes de entregar: (a) dá para explicar o objetivo em 1 frase? (b) o 
 - [DogFighter, 2026-10] Save — migração: a sanitização copia os campos do modelo padrão primeiro; um campo que precisa ser CALCULADO a partir de dados antigos não pode estar no modelo, senão a migração nunca roda.
 - [DogFighter, 2026-10] Save — item que deixou de existir no jogo é CONVERTIDO (ex.: foi para o inventário), nunca apagado.
 - [DogFighter, 2026-10] Código de teste que dá item pago (Divino de Robux) → só para o dono do jogo (`game.CreatorId`, rank 255 no grupo) e Studio; e confira LIMITES do save antes de dar muita coisa: a sanitização cortava o canil em 60 e os itens extras sumiriam ao entrar de novo (Divinos ganharam limite próprio).
+- [DogFighter, 2026-10-25] Teste que depende do relógio (evento de fim de semana ligado no domingo) quebrou → no teste, fixe o estado (atributo `EventForce = "off"`).
+- [DogFighter, 2026-10-25] `require` de módulo novo no TOPO do Config quebrou os testes que montam uma lista fixa de módulos → require preguiçoso (dentro da função que usa).
+- [DogFighter, 2026-10-25] Padrão Lua `%w` não pega "_": chave como `Acc_crown` precisa de `[%w_]+`.
 ## Personagem e combate
 - [DogFighter, 2026-10] Trocar `player.Character` pode APAGAR o personagem antigo: não reaproveite o modelo antigo (boneco parado, pet que fica treinando). Faça cópia nova (`Players:CreateHumanoidModelFromUserId`) ou crie um modelo novo.
 - [DogFighter, 2026-10] Poderes feitos para IA tinham trava `live(f) = vivo e não Controlled`: com o jogador no controle TODO poder parava no 1º passo (sem dano, sem animação). Ao reaproveitar código de IA para o jogador, procure essas travas (ligar Controlled=false só durante o poder).
@@ -227,6 +230,8 @@ Checklist antes de entregar: (a) dá para explicar o objetivo em 1 frase? (b) o 
   as ilhas ficaram baixas (lava e ponte flutuando). Certo: medir o chão DE VERDADE depois de pronto (raios em pontos planos: a praça
   na ilha principal, pontos planos de cada ilha) e, se estiver fora, refazer o terreno descontando a diferença (até 2 vezes).
   Detalhes pegam a altura REAL com raio no terreno pronto. Regra: nunca confiar na altura pedida ao terreno — medir no próprio lugar.
+- [DogFighter, 2026-10-25] Mar sem fim de verdade: água do Terrain no retângulo do mundo inteiro em blocos de 2048 (limite do FillBlock), CHÃO e PAREDES invisíveis (Transparency 1, CanTouch false) e o servidor resgata quem cair ou sair (volta para uma ilha aberta).
+- [DogFighter, 2026-10-25] Portal novo numa vila pronta: reserve o chão (`ctx:Reserve`) e aplaine (`TG.Pad`) ANTES das casas, e confira de cima numa foto que nada fica na frente.
 
 ## Economia e trade
 - [DogFighter, 2026-10] Ciclo de simulador: ganhar → comprar ovo → bicho melhor → ganhar mais. Várias fontes (renda por minuto do time, arena/boss, vender repetidos) e vários gastos (ovos, vagas, melhorias, casinha +10%/nível). Rebirth: zera dinheiro e níveis, mantém os bichos, +50% de dinheiro para sempre.
@@ -251,6 +256,8 @@ Checklist antes de entregar: (a) dá para explicar o objetivo em 1 frase? (b) o 
   e os estados raros (desmaiado, boss acordado, PvP, Mítico com 5 golpes, nome comprido).
 - [DogFighter, 2026-10] Telas no Roblox: UIScale cresce em volta do AnchorPoint e passa para os filhos; UIStroke Border fica POR FORA;
   filho sempre fica por cima do pai, então sombra dura = irmão atrás (holder > sombra + corpo); um UIScale por grupo de canto (celular ×1,4).
+- [DogFighter, 2026-10-25] UIGridLayout com células em escala que somam EXATAMENTE 1 (3×0.31 + 2×0.035) pode cair para 2 colunas → deixe folga (3×0.3 + 2×0.035).
+- [DogFighter, 2026-10-25] Bolinha de cor: `Size (s, s)` + `SizeConstraint RelativeXX` (com `(0.1, 1)` + RelativeYY vira um risquinho). Confira toda tela nova na prévia (`tools/hud_preview`).
 
 ## Áudio
 - [DogFighter, 2026] Há limite de uploads de áudio por mês → junte todos os efeitos num único áudio e toque pedaços com `PlaybackRegion`.
@@ -263,6 +270,8 @@ Checklist antes de entregar: (a) dá para explicar o objetivo em 1 frase? (b) o 
 - [DogFighter, 2026] DevEx exige no mínimo 30.000 Robux ganhos.
 
 - [DogFighter, 2026-10] Sistema mudou (ovos não nascem mais) → troque a função do passe (Fast Eggs → Fast Training) e renomeie no site.
+- [DogFighter, 2026-10-25] Passe de temporada = Developer Product (vale só para a temporada em que comprou, guardada no perfil), não gamepass.
+- [DogFighter, 2026-10-25] Doação = Developer Products de valor fixo (10…1000), recibo idempotente, NÃO promete item: a recompensa é título, agradecimento para o servidor e lista de apoiadores.
 ## Publicação
 - [DogFighter, 2026] Studio preso em "Upload in progress" → reiniciar, desligar Team Create, ou publicar pelo Open Cloud.
 - [DogFighter, 2026] Open Cloud: a chave precisa do jogo selecionado **e** das operações de escrita; o erro 403 "Scope not authorized" = faltou operação. IP `0.0.0.0/0`. A API não cria jogo novo, só atualiza.
