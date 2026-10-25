@@ -1,0 +1,17 @@
+{
+  "name": "dog-fighter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dog Fighter - jogo de cachorros lutadores que roda no navegador",
+  "scripts": {
+    "build": "node tools/build.mjs",
+    "dev": "node tools/build.mjs --watch --serve",
+    "exportar": "python3 tools/exportar/exportar.py tudo"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10",
+    "fflate": "^0.8.2",
+    "luaparse": "0.3.1",
+    "three": "0.170.0"
+  }
+}

@@ -1,0 +1,488 @@
+/* ---------------------------------------------------------------- abrir ovo */
+.chocar {
+	position: absolute;
+	inset: 0;
+	z-index: 40;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 18px;
+	background: rgba(13, 10, 31, 0.78);
+	pointer-events: auto;
+	animation: fade 0.25s;
+	overflow: hidden;
+}
+
+.chocar .raios {
+	position: absolute;
+	left: 50%;
+	top: 46%;
+	width: 160vmax;
+	height: 160vmax;
+	transform: translate(-50%, -50%);
+	background: repeating-conic-gradient(from 0deg, var(--cor, #ffe066) 0deg 9deg, transparent 9deg 22deg);
+	opacity: 0;
+	animation: gira 9s linear infinite;
+	transition: opacity 0.5s;
+	mask-image: radial-gradient(circle, #000 0%, transparent 45%);
+	-webkit-mask-image: radial-gradient(circle, #000 0%, transparent 45%);
+	pointer-events: none;
+}
+
+.chocar.revelou .raios {
+	opacity: 0.55;
+}
+
+@keyframes gira {
+	to {
+		transform: translate(-50%, -50%) rotate(360deg);
+	}
+}
+
+.chocar .palco {
+	position: relative;
+	width: 300px;
+	height: 300px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.chocar .ovo-css {
+	transform: scale(2.4);
+	transition: transform 0.2s;
+}
+
+.chocar .ovo-css.balanca {
+	animation: balanca 0.5s ease-in-out;
+}
+
+.chocar .ovo-css.balanca2 {
+	animation: balanca2 0.45s ease-in-out;
+}
+
+.chocar .ovo-css.estoura {
+	animation: estoura 0.35s forwards;
+}
+
+@keyframes balanca {
+	25% {
+		transform: scale(2.4) rotate(-14deg);
+	}
+	75% {
+		transform: scale(2.4) rotate(14deg);
+	}
+}
+
+@keyframes balanca2 {
+	20% {
+		transform: scale(2.55) rotate(-22deg);
+	}
+	60% {
+		transform: scale(2.55) rotate(22deg);
+	}
+}
+
+@keyframes estoura {
+	to {
+		transform: scale(3.6);
+		opacity: 0;
+		filter: brightness(3);
+	}
+}
+
+.chocar .rachadura {
+	position: absolute;
+	left: 10%;
+	right: 10%;
+	top: 45%;
+	height: 10px;
+	background: linear-gradient(135deg, transparent 0 20%, #1b1430 20% 30%, transparent 30% 45%, #1b1430 45% 55%, transparent 55% 70%, #1b1430 70% 80%, transparent 80%);
+	opacity: 0;
+}
+
+.chocar .ovo-css.rachado .rachadura {
+	opacity: 1;
+}
+
+.chocar .flash {
+	position: absolute;
+	inset: 0;
+	background: #fff;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.chocar .flash.vai {
+	animation: flash 0.5s;
+}
+
+@keyframes flash {
+	10% {
+		opacity: 0.9;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+
+.chocar .cao {
+	width: 300px;
+	height: 300px;
+	animation: aparece 0.55s cubic-bezier(0.2, 1.6, 0.4, 1);
+	filter: drop-shadow(0 0 22px var(--cor, #fff));
+}
+
+@keyframes aparece {
+	from {
+		transform: scale(0.2) rotate(-20deg);
+		opacity: 0;
+	}
+}
+
+.chocar .titulo-cao {
+	font-family: 'Luckiest Guy', sans-serif;
+	font-size: 46px;
+	text-align: center;
+	line-height: 1;
+	text-shadow: var(--sombra-texto);
+	animation: aparece 0.5s 0.1s both;
+}
+
+.chocar .raridade {
+	font-family: 'Luckiest Guy', sans-serif;
+	font-size: 28px;
+	color: var(--cor);
+	text-shadow: var(--sombra-texto);
+	animation: aparece 0.5s 0.2s both;
+}
+
+.chocar .novo {
+	display: inline-block;
+	margin-left: 10px;
+	padding: 2px 10px;
+	font-size: 20px;
+	background: linear-gradient(#ff6b7d, #d6304a);
+	border: 3px solid #1b1430;
+	border-radius: 10px;
+	vertical-align: middle;
+	animation: pulsa 0.8s infinite;
+}
+
+.chocar .resultados {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, 150px);
+	gap: 12px;
+	justify-content: center;
+	max-width: 92vw;
+}
+
+.chocar .botoes {
+	display: flex;
+	gap: 12px;
+	z-index: 2;
+}
+
+/* ---------------------------------------------------------------- roleta do Prof. Barkley */
+.roleta {
+	position: absolute;
+	inset: 0;
+	z-index: 40;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 16px;
+	background: radial-gradient(circle at 50% 40%, rgba(58, 47, 99, 0.92), rgba(13, 10, 31, 0.96));
+	pointer-events: auto;
+	animation: fade 0.3s;
+}
+
+.roleta h1 {
+	margin: 0;
+	font-family: 'Luckiest Guy', sans-serif;
+	font-weight: normal;
+	font-size: clamp(30px, 6vw, 54px);
+	text-shadow: var(--sombra-texto);
+	text-align: center;
+}
+
+.roleta .sub {
+	font-size: 18px;
+	color: #d8d2f5;
+	text-align: center;
+	max-width: 90vw;
+}
+
+.roleta .janela-fita {
+	position: relative;
+	width: min(900px, 96vw);
+	height: 190px;
+	overflow: hidden;
+	border: 4px solid #1b1430;
+	border-radius: 18px;
+	background: #1b1430;
+	box-shadow: 0 6px 0 #0d0a1f;
+}
+
+.roleta .fita {
+	position: absolute;
+	left: 0;
+	top: 10px;
+	display: flex;
+	gap: 10px;
+	will-change: transform;
+}
+
+.roleta .item {
+	width: 150px;
+	height: 166px;
+	flex: none;
+	border-radius: 14px;
+	border: 4px solid var(--rar);
+	background: linear-gradient(#4a3f7a, #2c2450);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	box-shadow: inset 0 -30px 40px -20px var(--rar);
+}
+
+.roleta .item img {
+	width: 130px;
+	height: 130px;
+}
+
+.roleta .item span {
+	font-family: 'Luckiest Guy', sans-serif;
+	font-size: 14px;
+	color: var(--rar);
+	text-shadow: 0 2px 0 #1b1430;
+}
+
+.roleta .ponteiro {
+	position: absolute;
+	left: 50%;
+	top: 0;
+	bottom: 0;
+	width: 6px;
+	transform: translateX(-50%);
+	background: #ffe066;
+	box-shadow: 0 0 14px #ffe066;
+	z-index: 2;
+}
+
+.roleta .ponteiro::before,
+.roleta .ponteiro::after {
+	content: '';
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	border: 14px solid transparent;
+}
+
+.roleta .ponteiro::before {
+	top: -2px;
+	border-top-color: #ffe066;
+}
+
+.roleta .ponteiro::after {
+	bottom: -2px;
+	border-bottom-color: #ffe066;
+}
+
+.roleta .chances-roleta {
+	display: flex;
+	gap: 8px;
+	flex-wrap: wrap;
+	justify-content: center;
+	font-size: 14px;
+}
+
+.roleta .chances-roleta span {
+	padding: 2px 8px;
+	border-radius: 8px;
+	background: rgba(0, 0, 0, 0.3);
+}
+
+.roleta .giros {
+	font-family: 'Luckiest Guy', sans-serif;
+	font-size: 22px;
+	color: #ffe066;
+}
+
+/* ---------------------------------------------------------------- tela de entrada */
+.inicio {
+	position: absolute;
+	inset: 0;
+	z-index: 30;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: space-between;
+	padding: 6vh 16px 7vh;
+	pointer-events: auto;
+	background: linear-gradient(rgba(13, 10, 31, 0.15), rgba(13, 10, 31, 0) 40%, rgba(13, 10, 31, 0.55));
+}
+
+.inicio .logo {
+	animation: logo-entra 0.9s cubic-bezier(0.2, 1.5, 0.4, 1);
+}
+
+@keyframes logo-entra {
+	from {
+		transform: rotate(-3deg) scale(0.3);
+		opacity: 0;
+	}
+}
+
+.inicio .faixa-sub {
+	margin-top: 10px;
+	font-family: 'Luckiest Guy', sans-serif;
+	font-size: clamp(16px, 3vw, 24px);
+	padding: 6px 18px;
+	border-radius: 12px;
+	background: linear-gradient(#ff9a3c, #e8513a);
+	border: 3px solid #1b1430;
+	box-shadow: 0 4px 0 #1b1430;
+	transform: rotate(-2deg);
+	text-shadow: 0 2px 0 #1b1430;
+}
+
+.inicio .meio {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 12px;
+}
+
+.inicio .btn-jogar {
+	font-size: clamp(30px, 6vw, 46px);
+	padding: 14px 54px;
+	border-radius: 20px;
+	animation: pulsa 1.2s ease-in-out infinite;
+}
+
+.inicio .rodape {
+	font-size: 13px;
+	color: #e8e2ff;
+	text-shadow: 0 2px 0 #1b1430;
+	text-align: center;
+}
+
+.cortina {
+	position: absolute;
+	inset: 0;
+	z-index: 60;
+	background: #0d0a1f;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.35s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	gap: 14px;
+	font-family: 'Luckiest Guy', sans-serif;
+	font-size: 34px;
+	text-shadow: var(--sombra-texto);
+}
+
+.cortina.ativa {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.cortina .barra {
+	width: min(320px, 70vw);
+}
+
+/* ---------------------------------------------------------------- celular: joystick e botões */
+.toque {
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	display: none;
+}
+
+.toque.ativo {
+	display: block;
+}
+
+.joystick {
+	position: absolute;
+	left: calc(20px + env(safe-area-inset-left));
+	bottom: calc(20px + env(safe-area-inset-bottom));
+	width: 150px;
+	height: 150px;
+	border-radius: 50%;
+	background: rgba(27, 20, 48, 0.35);
+	border: 3px solid rgba(255, 255, 255, 0.35);
+	pointer-events: auto;
+	touch-action: none;
+}
+
+.joystick .pino {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 64px;
+	height: 64px;
+	margin: -32px 0 0 -32px;
+	border-radius: 50%;
+	background: rgba(255, 255, 255, 0.75);
+	border: 3px solid #1b1430;
+}
+
+.botoes-toque {
+	position: absolute;
+	right: calc(16px + env(safe-area-inset-right));
+	bottom: calc(16px + env(safe-area-inset-bottom));
+	width: 250px;
+	height: 250px;
+	pointer-events: none;
+}
+
+.bt {
+	position: absolute;
+	border-radius: 50%;
+	border: 3px solid #1b1430;
+	box-shadow: 0 3px 0 #1b1430;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 26px;
+	pointer-events: auto;
+	touch-action: none;
+	user-select: none;
+	-webkit-user-select: none;
+	overflow: hidden;
+	color: #fff;
+	font-family: 'Luckiest Guy', sans-serif;
+}
+
+.bt small {
+	position: absolute;
+	bottom: 3px;
+	font-size: 10px;
+	text-shadow: 0 1px 0 #1b1430;
+}
+
+.bt .pizza {
+	position: absolute;
+	inset: 0;
+	border-radius: 50%;
+	background: conic-gradient(rgba(13, 10, 31, 0.72) var(--p, 0%), transparent 0);
+}
+
+.bt.on {
+	outline: 3px solid #fff;
+}
+
+.bt.travado {
+	filter: grayscale(0.85) brightness(0.6);
+}
+
+.bt.apertado {
+	transform: scale(0.92);
+}
