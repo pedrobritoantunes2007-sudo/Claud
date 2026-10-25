@@ -46,6 +46,14 @@ for t in tiles:
     if r.returncode != 0:
         print(r.stdout[-1500:], r.stderr[-3000:])
         sys.exit(f'falhou ao montar {key}')
+    # (2026-10-25) com o mar no mundo inteiro o dump da ilha principal vem com milhões de colunas "Air" (87 MB, o
+    # navegador não aguenta): fica só o que aparece na foto — colunas de verdade dentro do quadrado e as peças perto dele
+    data = json.load(open(dump))
+    half = t['span'] / 2 + 64
+    for isl in data.get('islands', {}).values():
+        isl['terrain'] = [c for c in isl.get('terrain', []) if c[3] != 'Air' and abs(c[0] - t['x']) <= half and abs(c[1] - t['z']) <= half]
+        isl['parts'] = [q for q in isl.get('parts', []) if abs(q[4] - t['x']) <= half + 64 and abs(q[6] - t['z']) <= half + 64]
+    json.dump(data, open(dump, 'w'))
     opts = os.path.join(tmp, key + '_opts.json')
     json.dump({'w': SIZE, 'h': SIZE, 'top': {'cx': t['x'], 'cz': t['z'], 'span': t['span'], 'transparent': True}}, open(opts, 'w'))
     png = os.path.join(out_dir, key + '.png')

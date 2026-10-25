@@ -232,6 +232,7 @@ Checklist antes de entregar: (a) dá para explicar o objetivo em 1 frase? (b) o 
   Detalhes pegam a altura REAL com raio no terreno pronto. Regra: nunca confiar na altura pedida ao terreno — medir no próprio lugar.
 - [DogFighter, 2026-10-25] Mar sem fim de verdade: água do Terrain no retângulo do mundo inteiro em blocos de 2048 (limite do FillBlock), CHÃO e PAREDES invisíveis (Transparency 1, CanTouch false) e o servidor resgata quem cair ou sair (volta para uma ilha aberta).
 - [DogFighter, 2026-10-25] Portal novo numa vila pronta: reserve o chão (`ctx:Reserve`) e aplaine (`TG.Pad`) ANTES das casas, e confira de cima numa foto que nada fica na frente.
+- [DogFighter, 2026-10-25] Mar no mundo inteiro deixou o dump da ilha principal com 2,6 milhões de colunas "Air" (87 MB) e a foto de cima falhava: recorte o quadrado da foto e tire o Air antes de renderizar (`tools/preview/map_tiles.py` já faz).
 
 ## Economia e trade
 - [DogFighter, 2026-10] Ciclo de simulador: ganhar → comprar ovo → bicho melhor → ganhar mais. Várias fontes (renda por minuto do time, arena/boss, vender repetidos) e vários gastos (ovos, vagas, melhorias, casinha +10%/nível). Rebirth: zera dinheiro e níveis, mantém os bichos, +50% de dinheiro para sempre.
